@@ -241,7 +241,8 @@ var ability_dict = {
 		removed: async (card) => {
 			let bdf = new Card(card_dict[21], card.holder);
 			bdf.removed.push( () => setTimeout( () => {
-				if (game.isPlaying())
+				// FIX: game.isPlaying() was wrong (token stayed in the grave) and the token may be in the hand (Decoy)
+				if (game.isPlaying() && bdf.holder.grave.cards.includes(bdf))
 					bdf.holder.grave.removeCard(bdf);
 			}, 1001) );
 			await board.addCardToRow(bdf, "close", card.holder);
@@ -254,8 +255,9 @@ var ability_dict = {
 		removed: async card => {
 			let bdf = new Card(card_dict[196], card.holder);
 			bdf.removed.push( () => setTimeout( () => {
-				if (game.isPlaying())
-					bdf.holder.grave.removeCard(bdf); 
+				// FIX: same as Avenger above
+				if (game.isPlaying() && bdf.holder.grave.cards.includes(bdf))
+					bdf.holder.grave.removeCard(bdf);
 			}, 1001) );
 			await board.addCardToRow(bdf, "close", card.holder);
 		},
@@ -390,13 +392,16 @@ var ability_dict = {
 		activated: async card => {
 			let deck = board.getRow(card, "deck", card.holder);
 			if (card.holder.controller instanceof ControllerAI) {
-				await ability_dict["eredin_king"].helper(card).card.autoplay(card.holder.deck);
+				// FIX: no weather card left in the deck -> nothing to play (used to throw and freeze the AI turn)
+				const best = ability_dict["eredin_king"].helper(card).card;
+				if (best)
+					await best.autoplay(card.holder.deck);
 			} else {
 				Carousel.curr.cancel();
 				await ui.queueCarousel(deck, 1, (c,i) => board.toWeather(c.cards[i], deck), c => c.faction === "weather", true);
 			}
 		},
-		weight: (card, ai, max) => ability_dict["eredin_king"].helper(card).weight,
+		weight: (card, ai, max) => Math.max(0, ability_dict["eredin_king"].helper(card).weight),
 		helper: card => {
 			let weather = card.holder.deck.cards.filter(c => c.row === "weather").reduce((a,c) =>a.map(c => c.name).includes(c.name) ? a : a.concat([c]), [] );
 			
@@ -501,8 +506,11 @@ var ability_dict = {
 		description: "Shuffle all cards from each player's graveyard back into their decks.",
 		activated: async card => {
 			AudioManager.playSFX('redraw');
-			Promise.all(card.holder.grave.cards.map(c => board.toDeck(c, card.holder.grave)));
-			await Promise.all(card.holder.opponent().grave.cards.map(c => board.toDeck(c, card.holder.opponent().grave)));
+			// FIX: the player's own discard pile was not awaited
+			await Promise.all([
+				...card.holder.grave.cards.map(c => board.toDeck(c, card.holder.grave)),
+				...card.holder.opponent().grave.cards.map(c => board.toDeck(c, card.holder.opponent().grave))
+			]);
 		},
 		weight: (card, ai, max, data) => {
 			if( game.roundCount < 2)

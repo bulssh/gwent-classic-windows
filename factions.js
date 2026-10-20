@@ -4,7 +4,8 @@ var factions = {
 	realms: {
 		name: "Northern Realms",
 		factionAbility: player => game.roundStart.push( async () => {
-			if (game.roundCount > 1 && game.roundHistory[game.roundCount-2].winner === player) {
+			// FIX: drawing from an empty deck threw and froze the start of the round
+			if (game.roundCount > 1 && game.roundHistory[game.roundCount-2]?.winner === player && player.deck.cards.length > 0) {
 				player.deck.draw(player.hand);
 				await ui.notification("north", 1200);
 			}
