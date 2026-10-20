@@ -96,6 +96,10 @@ var ability_dict = {
 			}
 		}
 	},
+	scorch_unit: {
+		name: "Scorch",
+		description: "Kills the strongest card(s) on the battlefield. "
+	},
 	scorch_c: {
 		name: "Scorch - Close Combat",
 		description: "Destroy your enemy's strongest Close Combat unit(s) if the combined strength of all his or her Close Combat units is 10 or more. ",

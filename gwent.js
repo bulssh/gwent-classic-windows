@@ -484,9 +484,9 @@ class Player {
 		this.reset();
 		
 		this.name = name;
-		document.getElementById("name-" + this.tag).innerHTML = name;
+		document.getElementById("name-" + this.tag).textContent = name;
 		
-		document.getElementById("deck-name-" +this.tag).innerHTML = factions[deck.faction].name;
+		document.getElementById("deck-name-" +this.tag).textContent = factionName(deck.faction);
 		let x = document.querySelector("#stats-" +this.tag+ " .profile-img > div > div");
 		x.style.backgroundImage = iconURL("deck_shield_" + deck.faction);
 	}
@@ -631,7 +631,7 @@ class Player {
 		this.elem_leader.children[1].classList.add("hide");
 		this.elem_leader.addEventListener("click", async () => await ui.viewCard(this.leader), false);
 		this.elem_leader.addEventListener('mouseenter', CLICK_EVENT_SFX);
-		this.elem_leader.children[0].setAttribute('data-title', "View leader");
+		this.elem_leader.children[0].setAttribute('data-title', t("tip.viewLeader"));
 	}
 	
 	// Enable access to leader ability and toggles leader visuals to on state
@@ -649,7 +649,7 @@ class Player {
 					AudioManager.playSFX('open');
 					await this.activateLeader();
 		}	), false);
-			this.elem_leader.children[0].setAttribute('data-title', "Play leader");
+			this.elem_leader.children[0].setAttribute('data-title', t("tip.playLeader"));
 		} else {
 			this.elem_leader.addEventListener("click", async () => await ui.viewCard(this.leader), false);
 		}
@@ -786,13 +786,13 @@ class CardContainer {
 	// Modifies the margin of card elements inside a row-like container to stack properly
 	resizeCardContainer(overlap_count, gap, coef) {
 		let n = this.elem.children.length;
-		let param = (n < overlap_count) ?  "" + gap+"vw" : defineCardRowMargin(n, coef);
+		let param = (n < overlap_count) ?  vw(gap) : defineCardRowMargin(n, coef);
 		let children = this.elem.getElementsByClassName("card");
 		for (let x of children)
 			x.style.marginLeft = x.style.marginRight = param;
 		
 		function defineCardRowMargin(n, coef = 0){
-			return "calc((100% - (4.45vw * " + n + ")) / (2*" +n+ ") - (" +coef+ "vw * " +n+ "))";
+			return "calc((100% - (" + vw(4.45) + " * " + n + ")) / (2*" +n+ ") - (" + vw(coef) + " * " +n+ "))";
 		}
 	}
 	
@@ -866,7 +866,7 @@ class Grave extends CardContainer {
 	
 	// Offsets the card element in the deck
 	setCardOffset(card, n){
-		card.elem.style.left =  -0.03 * n +"vw";
+		card.elem.style.left = vw(-0.03 * n);
 	}
 
 }
@@ -957,7 +957,7 @@ class Deck extends CardContainer {
 	
 	// Offsets the card element in the deck
 	setCardOffset(elem, n){
-		elem.style.left =  -0.03 * n +"vw";
+		elem.style.left = vw(-0.03 * n);
 	}
 	
 	// Override
@@ -1566,7 +1566,7 @@ class Game {
 		await ui.queueCarousel(player_me.hand, 2, async (c, i) => { 
 			AudioManager.playSFX('redraw');
 			await player_me.deck.swap(c, c.cards[i]);
-		}, c => true, false, true, "Choose up to 2 cards to redraw.");
+		}, c => true, false, true, t("redraw"));
 		player_me.hand.sort();
 		ui.enablePlayer(false);
 	}
@@ -1677,8 +1677,8 @@ class Game {
 	async endGame() {
 		let endScreen = document.getElementById("end-screen");
 		let rows = endScreen.getElementsByTagName("tr");
-		rows[1].children[0].innerHTML = player_me.name;
-		rows[2].children[0].innerHTML = player_op.name;
+		rows[1].children[0].textContent = player_me.name;
+		rows[2].children[0].textContent = player_op.name;
 		
 		for (let i=1; i<4; ++i) {
 			let round = this.roundHistory[i-1];
@@ -1690,6 +1690,7 @@ class Game {
 		}
 		
 		endScreen.children[0].className = "";
+		endScreen.children[0].setAttribute("data-text", player_op.health <= 0 && player_me.health <= 0 ? t("end.drawTitle") : player_op.health === 0 ? t("end.win") : t("end.lose"));
 		if (player_op.health <= 0 && player_me.health <= 0) {
 			endScreen.getElementsByTagName("p")[0].classList.remove("hide");
 			AudioManager.playSFX("game_lose");
@@ -1712,10 +1713,12 @@ class Game {
 		AudioManager.playSFX('warning');
 		ui.popup(
 			// FIX: "Resume" must give control back (the board stayed unclickable)
-			"Resume", ()=>ui.enablePlayer(true),
-			"Exit", ()=>this.returnToCustomization(),
-			"Quit current game?" , "This will return you to the deck customization menu."
-		); 
+			t("exit.resume"), ()=>ui.enablePlayer(true),
+			t("exit.exit"), ()=>this.returnToCustomization(),
+			t("exit.title") , t("exit.text")
+		);
+		if (Popup.curr)
+			Popup.curr.escapeIsYes = true; 
 	}
 	
 	// Returns the client to the deck customization screen
@@ -1735,7 +1738,7 @@ class Game {
 	{
 		this.reset();
 		player_me.reset();
-		player_op = new Player(1, 'Player 2', dm.constructOpponentDeck(false));
+		player_op = new Player(1, t("player.op"), dm.constructOpponentDeck(false));
 		this.endScreen.classList.add("hide");
 		this.startGame();
 	}
@@ -1794,23 +1797,25 @@ class Card {
 			}
 		}
 		
+		// texts shown in the description box (localized, see i18n.js)
+		const textKey = x => (x === "scorch" && this.isUnit()) || (x === "scorch" && this.hero) ? "scorch_unit" : x;
 		if (this.row === "leader")
-			this.desc_name = "Leader Ability";
+			this.desc_name = t("leader.ability");
 		else if (this.abilities.length > 0)
-			this.desc_name = ability_dict[this.abilities[this.abilities.length-1]].name;
+			this.desc_name = abilityName(textKey(this.abilities[this.abilities.length-1]));
 		else if (this.row==="agile")
-			this.desc_name = "agile";
+			this.desc_name = abilityName("agile");
 		else if (this.hero)
-			this.desc_name = "hero";
+			this.desc_name = abilityName("hero");
 		else
 			this.desc_name = "";
 		
-		this.desc = this.row ==="agile" ? ability_dict["agile"].description : "";
+		this.desc = this.row ==="agile" ? abilityDesc("agile") : "";
 		for (let i=this.abilities.length-1; i>=0; --i) {
-			this.desc += ability_dict[this.abilities[i]].description;
+			this.desc += abilityDesc(textKey(this.abilities[i]));
 		}
 		if (this.hero)
-			this.desc += ability_dict["hero"].description;
+			this.desc += abilityDesc("hero");
 		
 		this.elem = this.createCardElem(this);
 	}
@@ -1913,7 +1918,8 @@ class Card {
 		let elem = document.createElement("div");
 		elem.style.backgroundImage = smallURL(card.faction + "_" + card.filename);
 		elem.classList.add("card");
-		elem.setAttribute('data-title', card.name);
+		elem.setAttribute('data-title', cardName(card));
+		elem.gcCard = card;
 		elem.addEventListener("click", () => ui.selectCard(card), false);
 		// FIX: right click shows the card details (the browser menu used to open in Firefox)
 		elem.addEventListener("contextmenu", e => {
@@ -2015,6 +2021,10 @@ class UI {
 		this.toggleSFX_elem = document.getElementById("toggle-sfx");
 		this.toggleSettings.push(this.toggleSFX_elem);
 		this.toggleSFX_elem.addEventListener('click', () => this.toggleSFX())
+		this.toggleLanguage_elem = document.getElementById("toggle-language");
+		this.toggleLanguage_elem.innerHTML = LANG === "fr" ? "<b>FR</b> · EN" : "FR · <b>EN</b>";
+		this.toggleLanguage_elem.addEventListener("click", () => setLanguage(LANG === "fr" ? "en" : "fr"));
+		this.toggleSettings.push(this.toggleLanguage_elem);
 		if (!Settings.soundEffects.isEnabled())
 			this.toggleSFX_elem.classList.add("fade");
 
@@ -2180,7 +2190,7 @@ class UI {
 	showPreviewVisuals(card){
 		this.previewCard = card;
 		this.preview.classList.remove("hide");
-		this.preview.getElementsByClassName("card-lg")[0].style.backgroundImage = largeURL(card.faction+"_"+card.filename);
+		setLargeCardImage(this.preview.getElementsByClassName("card-lg")[0], card);
 		let desc_elem = this.preview.getElementsByClassName("card-description")[0];
 		this.setDescription(card, desc_elem);
 	}
@@ -2237,6 +2247,7 @@ class UI {
 		const fadeSpeed = 150;
 		duration = Math.max(400, duration - 2*fadeSpeed);
 		this.notif_elem.children[0].id = "notif-" + name;
+		this.notif_elem.children[0].setAttribute("data-text", t("notif." + name));
 		await fadeIn(this.notif_elem, fadeSpeed);
 		await sleep(duration);
 		await fadeOut(this.notif_elem, fadeSpeed);
@@ -2287,6 +2298,18 @@ class UI {
 		}
 	}
 	
+	// Displays a message with a single OK button
+	async message(text, title = "") {
+		await this.popup("OK", null, null, null, title, text);
+	}
+
+	// Asks a yes / no question, resolves true for yes
+	async confirm(title, text) {
+		let answer = false;
+		await this.popup(t("popup.yes"), () => answer = true, t("popup.no"), () => answer = false, title, text);
+		return answer;
+	}
+
 	// Displays a custom confirmation menu 
 	async popup(yesName, yes, noName, no, title, description, alpha = .95) {
 		let p = new Popup(yesName, yes, noName, no, title, description, alpha);
@@ -2296,6 +2319,7 @@ class UI {
 	// Enables or disables selection and highlighting of rows specific to the card
 	setSelectable(card, enable){
 		if(!enable) {
+			document.querySelectorAll(".gc-target").forEach(e => e.classList.remove("gc-target"));
 			for (let row of board.row){
 				row.elem.classList.remove("row-selectable");
 				row.elem.classList.remove("noclick");
@@ -2354,7 +2378,10 @@ class UI {
 					r.elem.classList.remove("card-selectable");
 				} else {
 					r.elem.classList.add("row-selectable");
-					units.forEach( c => c.elem.classList.remove("noclick") );
+					units.forEach( c => {
+						c.elem.classList.remove("noclick");
+						c.elem.classList.add("gc-target");
+					});
 				}
 			}
 			return;
@@ -2456,7 +2483,7 @@ class Carousel {
 	
 	// Called by the client to cycle cards displayed by n
 	shift(event, n){
-		(event || window.event).stopPropagation();
+		(event || window.event)?.stopPropagation();
 		this.index = Math.max(0, Math.min(this.indices.length-1, this.index+n));
 		AudioManager.playSFX('ui_card');
 		this.update();
@@ -2481,7 +2508,7 @@ class Carousel {
 	
 	// Called by client to perform action on the middle card in focus
 	async select(event) {
-		(event || window.event).stopPropagation();
+		(event || window.event)?.stopPropagation();
 		--this.count;
 		if (this.isLastSelection())
 			this.elem.classList.add("hide");
@@ -2521,11 +2548,12 @@ class Carousel {
 			let curr = this.index - 2 + i;
 			if (curr >= 0 && curr < this.indices.length) {
 				let card = this.container.cards[this.indices[curr]];
-				this.previews[i].style.backgroundImage = largeURL(card.faction + "_" + card.filename);
+				setLargeCardImage(this.previews[i], card);
 				this.previews[i].classList.remove("hide");
 				this.previews[i].classList.remove("noclick");
 			} else {
 				this.previews[i].style.backgroundImage = "";
+				this.previews[i].gcCard = this.previews[i].gcCardData = null;
 				this.previews[i].classList.add("hide");
 				this.previews[i].classList.add("noclick");
 			}
@@ -2563,8 +2591,10 @@ class Popup {
 		let main = this.elem.children[0];
 		main.children[0].innerHTML = header ? header : "";
 		main.children[1].innerHTML = description ? description : "";
-		main.children[2].children[0].innerHTML = (yesName) ? yesName : "Yes";
-		main.children[2].children[1].innerHTML = (noName) ? noName : "No";
+		main.children[2].children[0].textContent = (yesName) ? yesName : t("popup.yes");
+		main.children[2].children[1].textContent = (noName) ? noName : t("popup.no");
+		// a popup without "no" label shows a single button (messages)
+		main.children[2].children[1].classList.toggle("hide", noName === null);
 
 		const bgColor = new RGBA(10, 10, 10, alpha);
 		this.elem.style.backgroundColor = bgColor.toString();
@@ -2627,6 +2657,17 @@ class DeckMaker {
 		document.getElementById("download-deck").addEventListener("click", () => this.downloadDeck(), false);
 		document.getElementById("add-file").addEventListener("change", () => this.uploadPlayerDeck(), false);
 		document.getElementById("start-game").addEventListener("click", () => this.startNewGame(), false);
+		const diffButtons = [...document.querySelectorAll("#difficulty > button")];
+		const showDifficulty = () => diffButtons.forEach(b => b.classList.toggle("selected", b.dataset.level === Settings.difficulty.get()));
+		diffButtons.forEach(b => {
+			b.addEventListener("click", () => {
+				Settings.difficulty.set(b.dataset.level);
+				AudioManager.playSFX("ui_card_bank");
+				showDifficulty();
+			});
+			b.addEventListener("mouseenter", CLICK_EVENT_SFX);
+		});
+		showDifficulty();
 		document.getElementById("start-game").addEventListener("mouseenter", CLICK_EVENT_SFX, false);
 	}
 
@@ -2659,16 +2700,16 @@ class DeckMaker {
 			return;
 		if (!force && this.faction === faction_name)
 			return false;
-		this.elem.getElementsByTagName("h1")[0].innerHTML = factions[faction_name].name;
+		this.elem.getElementsByTagName("h1")[0].textContent = factionName(faction_name);
 		this.elem.getElementsByTagName("h1")[0].style.backgroundImage = iconURL("deck_shield_" + faction_name);
-		document.getElementById("faction-description").innerHTML = factions[faction_name].description;
+		document.getElementById("faction-description").textContent = factionDesc(faction_name);
 		
 		this.leaders = 
 			card_dict.map((c,i) => ({index: i, card:c}) )
 			.filter(c => c.card.deck === faction_name && c.card.row === "leader");
 		if (!this.leader || this.faction !== faction_name) {
 			this.leader = this.leaders[0];
-			this.leader_elem.children[1].style.backgroundImage = largeURL(this.leader.card.deck + "_" + this.leader.card.filename);
+			setLargeCardImage(this.leader_elem.children[1], this.leader.card);
 		}
 		this.faction = faction_name;
 		Settings.lastFaction.set(faction_name);
@@ -2678,7 +2719,7 @@ class DeckMaker {
 	// Sets current leader and updates UI
 	setLeader(index){
 		this.leader = this.leaders.filter( l => l.index == index)[0];
-		this.leader_elem.children[1].style.backgroundImage = largeURL(this.leader.card.deck + "_" + this.leader.card.filename);
+		setLargeCardImage(this.leader_elem.children[1], this.leader.card);
 	}
 	
 	// Constructs a bank of cards that can be used by the faction's deck.
@@ -2712,7 +2753,7 @@ class DeckMaker {
 		let card_data = card_dict[index];
 		
 		let elem = document.createElement("div");
-		elem.style.backgroundImage = largeURL(card_data.deck + "_" + card_data.filename);
+		setLargeCardImage(elem, card_data);
 		elem.classList.add("card-lg");
 		let count = document.createElement("div");
 		elem.appendChild(count);
@@ -2805,7 +2846,7 @@ class DeckMaker {
 		ui.queueCarousel(container, 1, (c,i) => {
 			let data = c.cards[i].data;
 			this.leader = data;
-			this.leader_elem.children[1].style.backgroundImage = largeURL(data.card.deck + "_" + data.card.filename);
+			setLargeCardImage(this.leader_elem.children[1], data.card);
 			Settings.getFactionSettings(this.leader.card.deck).setLeader(this.leader);
 			AudioManager.playSFX('ui_card_bank');
 		}, () => true, false, true);
@@ -2817,7 +2858,7 @@ class DeckMaker {
 	selectFaction() {
 		let container = new CardContainer();
 		container.cards = Object.keys(factions).map( f => {
-			return {abilities: [f], filename: f, desc_name: factions[f].name, desc: factions[f].description, faction: "faction"};
+			return {abilities: [f], filename: f, desc_name: factionName(f), desc: factionDesc(f), faction: "faction"};
 		});
 		let index = container.cards.reduce((a,c,i) => c.filename === this.faction ? i : a, 0);
 		ui.queueCarousel(container, 1, (c,i) => {
@@ -2870,15 +2911,15 @@ class DeckMaker {
 	
 	// Verifies current deck, creates the players and their decks, then starts a new game
 	startNewGame(){
-		let warning = "";
+		let warning = [];
 		if (this.stats.units < 22)
-			warning += "Your deck must have at least 22 unit cards. \n";
+			warning.push(t("deck.warnUnits"));
 		if (this.stats.special > 10)
-			warning += "Your deck must have no more than 10 special cards. \n";
-		if (warning != "")
+			warning.push(t("deck.warnSpecial"));
+		if (warning.length)
 		{
 			AudioManager.playSFX("warning");
-			return alert(warning);
+			return ui.message(warning.join("<br>"));
 		}
 		
 		const me_deck = { 
@@ -2888,8 +2929,8 @@ class DeckMaker {
 		};
 		const op_deck = this.constructOpponentDeck(true);
 		
-		player_me = new Player(0, "Player 1", me_deck);
-		player_op = new Player(1, "Player 2", op_deck);
+		player_me = new Player(0, t("player.me"), me_deck);
+		player_op = new Player(1, t("player.op"), op_deck);
 		
 		this.elem.classList.add("hide");
 		game.startGame();
@@ -2926,8 +2967,23 @@ class DeckMaker {
 	}
 	
 	// Called by the client to downlaod the current deck as a JSON file
-	downloadDeck(){
+	async downloadDeck(){
 		let json = this.deckToJSON();
+		const tauri = window.__TAURI__;
+		if (tauri?.dialog?.save && tauri?.core?.invoke) {
+			try {
+				const path = await tauri.dialog.save({
+					title: t("deck.saveTitle"),
+					defaultPath: "GwentDeck-" + this.faction + ".json",
+					filters: [{name: "Deck Gwent", extensions: ["json"]}]
+				});
+				if (path)
+					await tauri.core.invoke("write_text_file", {path: path, contents: json});
+			} catch (e) {
+				ui.message(String(e));
+			}
+			return;
+		}
 		let str = "data:text/json;charset=utf-8," + encodeURIComponent(json);
 		let hidden_elem = document.getElementById('download-json');
 		hidden_elem.href = str;
@@ -2948,7 +3004,8 @@ class DeckMaker {
 					callback(deck);
 				
 			} catch (e) {
-				alert("Uploaded deck is not formatted correctly!");
+				AudioManager.playSFX('warning');
+				ui.message(t("deck.badFormat"));
 			}
 			finally
 			{
@@ -2977,12 +3034,12 @@ class DeckMaker {
 			return deck;
 		} catch (e) {
 			AudioManager.playSFX('warning');
-			alert("Uploaded deck is not parsable!");
+			ui.message(t("deck.notParsable"));
 			return;
 		}
 	}
 
-	loadDeck(deck, silent = true)
+	async loadDeck(deck, silent = true)
 	{
 		// FIX: the parameter was spelled 'siilent' (ReferenceError on any warning), the warning for
 		// too many copies read card_dict[c.index] (always undefined), and answering OK to
@@ -2990,32 +3047,32 @@ class DeckMaker {
 		const refuse = msg => {
 			if (!silent) {
 				AudioManager.playSFX('warning');
-				alert(msg);
+				ui.message(msg);
 			}
 			return null;
 		};
 		if (!deck || typeof deck !== "object" || !Array.isArray(deck.cards))
-			return refuse("Uploaded deck is not formatted correctly!");
+			return refuse(t("deck.badFormat"));
 		if (!this.isValidFaction(deck.faction))
-			return refuse("Unknown deck faction '" + deck.faction + "'.");
+			return refuse(t("deck.badFaction", deck.faction));
 		const leader = card_dict[deck.leader];
 		if (!leader || leader.row !== "leader")
-			return refuse("'" + (leader ? leader.name : deck.leader) + "' cannot be used as a leader.");
+			return refuse(t("deck.badLeader", leader ? cardName(leader) : deck.leader));
 		if (deck.faction != leader.deck)
-			return refuse("Leader '" + leader.name + "' doesn't match deck faction '" + deck.faction + "'.");
+			return refuse(t("deck.leaderFaction", cardName(leader), factionName(deck.faction)));
 
-		let warning = "";
+		let warning = [];
 		// check if cards exist and have correct faction & count (duplicate entries are merged)
 		const counts = new Map();
 		for (const c of deck.cards) {
 			const index = Array.isArray(c) ? Number(c[0]) : NaN;
 			const card = card_dict[index];
 			if (!card) {
-				warning += "ID " + (Array.isArray(c) ? c[0] : c) + " does not correspond to a card.\n";
+				warning.push(t("deck.badId", Array.isArray(c) ? c[0] : c));
 				continue;
 			}
 			if (card.row === "leader" || ![deck.faction, "neutral", "special", "weather"].includes(card.deck)) {
-				warning += "'" + card.name + "' cannot be used in a deck of faction type '" + deck.faction +"'\n";
+				warning.push(t("deck.wrongFaction", cardName(card), factionName(deck.faction)));
 				continue;
 			}
 			const n = Math.floor(Number(c[1]));
@@ -3027,25 +3084,25 @@ class DeckMaker {
 		for (const [index, n] of counts) {
 			const max = Number(card_dict[index].count);
 			if (n > max)
-				warning += "Deck contains " + n + "/" + max + " available " + card_dict[index].name + " cards\n";
+				warning.push(t("deck.tooMany", n, max, cardName(card_dict[index])));
 			if (Math.min(n, max) > 0)
 				cards.push({index: index, count: Math.min(n, max)});
 		}
 		// prompt warning if necessary
-		if (warning)
+		if (warning.length)
 		{
 			if (silent)
 				return null;
 			AudioManager.playSFX('warning');
-			if (!confirm(warning + "\n\nContinue importing deck?"))
+			if (!(await ui.confirm(t("deck.continue"), warning.slice(0, 8).join("<br>") + (warning.length > 8 ? "<br>…" : ""))))
 				return null;
 		}
 		return {faction: deck.faction, leader: Number(deck.leader), cards: cards};
 	}
 
-	loadPlayerDeck(deck, silent = true)
+	async loadPlayerDeck(deck, silent = true)
 	{
-		const loadedDeck = this.loadDeck(deck, silent);
+		const loadedDeck = await this.loadDeck(deck, silent);
 		if (!loadedDeck)
 			return;
 		
@@ -3053,7 +3110,7 @@ class DeckMaker {
 		this.setFaction(loadedDeck.faction, true);
 		if (card_dict[loadedDeck.leader].row === "leader" && loadedDeck.faction === card_dict[loadedDeck.leader].deck){
 			this.leader = this.leaders.filter(c => c.index === loadedDeck.leader)[0];
-			this.leader_elem.children[1].style.backgroundImage = largeURL(this.leader.card.deck + "_" + this.leader.card.filename);
+			setLargeCardImage(this.leader_elem.children[1], this.leader.card);
 		}
 		this.makeBank(loadedDeck.faction, loadedDeck.cards);
 		this.update();
@@ -3061,9 +3118,9 @@ class DeckMaker {
 		Settings.getFactionSettings(this.faction).set({leader: this.leader.index, cards: this.deck.filter(x => x.count > 0)});
 	}
 
-	loadOpponentDeck(deck, silent = true)
+	async loadOpponentDeck(deck, silent = true)
 	{
-		const loadedDeck = this.loadDeck(deck, silent);
+		const loadedDeck = await this.loadDeck(deck, silent);
 		if (!loadedDeck)
 			return;
 		this.opponentData = loadedDeck;
@@ -3085,13 +3142,13 @@ class DeckMaker {
 		const buttons = ['op-preview-clear', 'op-preview-open'].map(id=>document.getElementById(id));
 		if (isEmpty(this.opponentData))
 		{
-			leaderElem.children[1].innerHTML = "Random";
+			leaderElem.children[1].textContent = t("deck.random");
 			[factionElem, ...buttons].forEach(e=>e.classList.add('hide'));
 		}
 		else
 		{
 			factionElem.style.setProperty('background-image', iconURL('deck_shield_' + this.opponentData.faction));
-			leaderElem.children[1].innerHTML = card_dict[this.opponentData.leader].name;
+			leaderElem.children[1].textContent = cardName(card_dict[this.opponentData.leader]);
 			[factionElem, ...buttons].forEach(e=>e.classList.remove('hide'));
 		}
 	}
@@ -3105,7 +3162,7 @@ class DeckMaker {
 		const container = new CardContainer();
 		//container.cards = [leader, ...Card.this.opponentData.cards];
 		container.cards = Card.getCardsFromIdCounts([leader, ...this.opponentData.cards]);
-		ui.queueCarousel(container, 1, ()=>{}, ()=>true, false, true, "Opponent's deck");
+		ui.queueCarousel(container, 1, ()=>{}, ()=>true, false, true, t("deck.opponentDeck"));
 	}
 }
 
@@ -3291,6 +3348,7 @@ class Settings
 	static notifications = new ToggleOption("gc-notifications", true);
 	static soundEffects = new ToggleOption("gc-sound-effects", true);
 	static lastFaction = new SavedString("gc-last-faction", "realms"); 
+	static difficulty = new SavedString("gc-difficulty", "normal"); 
 	static realmsDeck = new SavedDeck("gc-deck-realms", premade_deck[0]);
 	static nilfgaardDeck = new SavedDeck("gc-deck-nilfgaard", premade_deck[2]);
 	static monstersDeck = new SavedDeck("gc-deck-monsters", premade_deck[4]);
@@ -3440,9 +3498,9 @@ async function translate(elem, x, y){
 	let vw100 = 100 / document.getElementById("dimensions").offsetWidth;
 	x*=vw100;
 	y*=vw100 ;
-	elem.style.transform = "translate(" + x + "vw, " + y + "vw)";
+	elem.style.transform = "translate(" + vw(x) + ", " + vw(y) + ")";
 	let margin = elem.style.marginLeft;
-	elem.style.marginRight = -elem.offsetWidth*vw100 + "vw";
+	elem.style.marginRight = vw(-elem.offsetWidth*vw100);
 	elem.style.marginLeft = "";
 	await sleep(499);
 	elem.style.transform = "";
@@ -3504,12 +3562,24 @@ function fade(fadeIn, elem, dur){
 	});
 }
 
+// Sets a large card picture on an element (localized picture without English text in French)
+// and remembers which card it shows (used by the zoom on right click)
+function setLargeCardImage(elem, card) {
+	if (!elem)
+		return;
+	const deck = card.faction || card.deck;
+	elem.style.backgroundImage = largeURL(deck + "_" + card.filename);
+	elem.gcCard = card instanceof Card ? card : null;
+	elem.gcCardData = card instanceof Card ? null : (card.name ? card : null);
+	elem.setAttribute("data-lg-name", card.name && deck !== "faction" ? cardName(card) : "");
+}
+
 //      Get Image paths   
 function iconURL(name, ext = "png"){
 	return imgURL("icons/" + name, ext);
 }
 function largeURL(name, ext="jpg"){
-	return imgURL("lg/" + name, ext) 
+	return imgURL((LANG === "fr" ? "lg_fr/" : "lg/") + name, ext)
 }
 function smallURL(name, ext="jpg"){
 	return imgURL("sm/" + name, ext);
@@ -3601,6 +3671,8 @@ function onYouTubeIframeAPIReady() {
 /*----------------------------------------------------*/
 
 
+document.documentElement.classList.add("lang-" + LANG);
+applyStaticTranslations();
 const eventManager = new EventManager(); 
 let userInteracted = false;
 var ui = new UI();

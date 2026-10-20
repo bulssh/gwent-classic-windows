@@ -3,6 +3,12 @@
    cursor: url('img/icons/cursor.png'), auto;
 }
 
+/* The whole game is a 16:9 stage scaled to fit the window (letterbox), so nothing ever scrolls.
+   --vw is 1% of the stage width (it used to be 1% of the window width). */
+:root {
+	--vw: min(1vw, 1.777778vh);
+}
+
 html,body
 {
 	/* eliminate whitespace */
@@ -10,8 +16,22 @@ html,body
     height: 100%;
     margin: 0px;
     padding: 0px;
-    overflow-x: visible;
+    overflow: hidden;
+	overscroll-behavior: none;
 	scrollbar-width: none; /* disable srcrollbar for firefox */
+	touch-action: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+#stage {
+	position: absolute;
+	left: calc((100vw - 100 * var(--vw)) / 2);
+	top: calc((100vh - 56.25 * var(--vw)) / 2);
+	width: calc(100 * var(--vw));
+	height: calc(56.25 * var(--vw));
+	overflow: hidden;
 }
 
 /* remove spacing between html elements */
@@ -31,7 +51,7 @@ body::-webkit-scrollbar {
 main {
 	position:absolute;
 	width: 100%;
-	height: calc(100vw * 1080 / 1920);
+	height: calc(calc(100 * var(--vw)) * 1080 / 1920);
 	background-image: url('img/board.jpg');
 	background-size: 100% auto;
 	background-repeat: no-repeat;
@@ -42,20 +62,22 @@ main {
 ::-moz-selection { background: transparent; }	/* Gecko Browsers */
 
 ::-webkit-scrollbar {
-  width: 1.5vw;
+  width: calc(1.5 * var(--vw));
 }
 ::-webkit-scrollbar-thumb {
   background: #5559;
-  border-radius: .5vw;
-  height: 3vw;
-  border: .35vw double black;
+  border-radius: calc(.5 * var(--vw));
+  height: calc(3 * var(--vw));
+  border: calc(.35 * var(--vw)) double black;
 }
 ::-webkit-scrollbar-track {
   background: #131313;
 }
 
-html {
+#card-bank, #card-deck {
 	scrollbar-color: #5559 #131313; /* mozilla */
+	touch-action: pan-y;
+	overscroll-behavior: contain;
 }
 
 #click-background {
@@ -67,10 +89,10 @@ html {
 
 #hand-op {
 	position:absolute;
-	height: 6.35vw;
-	width: 4.45vw;
-	top:-7vw;
-	left: 33vw;
+	height: calc(6.35 * var(--vw));
+	width: calc(4.45 * var(--vw));
+	top:calc(-7 * var(--vw));
+	left: calc(33 * var(--vw));
 	
 	border: 1px solid blue;
 }
@@ -79,11 +101,11 @@ html {
 
 #exit-game
 {
-	top: 1.4vw;
-	left: 1vw;
+	top: calc(1.4 * var(--vw));
+	left: calc(1 * var(--vw));
 	position: absolute;
-	width: 2vw;
-	height: 2vw;
+	width: calc(2 * var(--vw));
+	height: calc(2 * var(--vw));
 	background-image: url("svg/exit.svg");
 	background-repeat: no-repeat;
 	background-size: contain;
@@ -107,12 +129,12 @@ html {
 
 .settings-button {
 	position: absolute;
-	width: 2.5vw;
-	height: 2.5vw;
+	width: calc(2.5 * var(--vw));
+	height: calc(2.5 * var(--vw));
 }
 .settings-button>img{
-	width: 2.5vw;
-	height: 2.5vw;
+	width: calc(2.5 * var(--vw));
+	height: calc(2.5 * var(--vw));
 	filter:drop-shadow(0px 0px 2px black);
 }
 
@@ -128,28 +150,28 @@ html {
 }
 
 #toggle-music {
-    top: 48.9vw;
-    left: 14vw;
+    top: calc(48.9 * var(--vw));
+    left: calc(14 * var(--vw));
 }
 #toggle-music.deck-menu { 
-	top: 45.3vw;
-	left: 46.7vw;
+	top: calc(45.3 * var(--vw));
+	left: calc(46.7 * var(--vw));
 	z-index: 86;
 }
 
 #toggle-sfx {
-	top: 48.9vw;
-    left: 17.2vw;
+	top: calc(48.9 * var(--vw));
+    left: calc(17.2 * var(--vw));
 }
 #toggle-sfx.deck-menu {
-	top: 45.3vw;
-	left: 50.1vw;
+	top: calc(45.3 * var(--vw));
+	left: calc(50.1 * var(--vw));
 	z-index: 86;
 }
 
 #toggle-notifications {
-	top: 48.9vw;
-    left: 20vw;
+	top: calc(48.9 * var(--vw));
+    left: calc(20 * var(--vw));
 }
 #toggle-notifications.deck-menu {
 	display: none !important;
@@ -157,8 +179,8 @@ html {
 
 #pass-button[data-title]:hover::after
 {
-	bottom: -2.2vw;
-	left: -0.45vw
+	bottom: calc(-2.2 * var(--vw));
+	left: calc(-0.45 * var(--vw))
 }
 
 
@@ -185,84 +207,68 @@ html {
 	background-position: center;
 }
 #notification-bar > div::after {
+	content: attr(data-text);
 	position: absolute;
 	left: 100.5%;
 	top: 32.1%;
 	width: 205%;
 	height: 47.25%;
 	color: goldenrod;
-	font-size: 1.6vw;
+	font-size: calc(1.6 * var(--vw));
 	text-align:left;
 	font-weight:bold;
 	display: flex;
 	align-items: center;
 }
 
-#notif-me-first::after { content:"You will go first"; }
-#notif-op-first::after { content:"Your opponent will go first"; }
 
 #notif-me-coin { background-image: url('img/icons/notif_me_coin.png'); }
-#notif-me-coin::after { content:"You will go first"; }
 
 #notif-op-coin { background-image: url('img/icons/notif_op_coin.png'); }
-#notif-op-coin::after { content:"Your opponent will go first"; }
 
 #notif-round-start { background-image: url('img/icons/notif_round_start.png'); }
-#notif-round-start::after { content:"Round Start"; }
 
 #notif-me-pass { background-image: url('img/icons/notif_round_passed.png'); }
-#notif-me-pass::after { content:"Round passed"; }
 
 #notif-op-pass { background-image: url('img/icons/notif_round_passed.png'); }
-#notif-op-pass::after { content:"Your opponent has passed"; }
 
 #notif-win-round { background-image: url('img/icons/notif_win_round.png'); } 
-#notif-win-round::after { content:"You won the round!"; }
 
 #notif-lose-round { background-image: url('img/icons/notif_lose_round.png'); }
-#notif-lose-round::after { content:"Your opponent won the round"; }
 
 #notif-draw-round { background-image: url('img/icons/notif_draw_round.png'); }
-#notif-draw-round::after {content:"The round ended in a draw"; }
 
 #notif-me-turn { background-image: url('img/icons/notif_me_turn.png'); } 
-#notif-me-turn::after { content:"Your turn!"; }
 
 #notif-op-turn { background-image: url('img/icons/notif_op_turn.png'); }
-#notif-op-turn::after { content:"Opponent's turn"; }
 
 #notif-north { background-image: url('img/icons/notif_north.png'); }
-#notif-north::after { content:"Northern Realms faction ability triggered - North draws an additional card."; }
 
 #notif-monsters { background-image: url('img/icons/notif_monsters.png'); }
-#notif-monsters::after { content: "Monsters faction ability triggered - one randomly-chosen Monster Unit Card stays on the board"; }
 
 #notif-scoiatael { background-image: url('img/icons/notif_scoiatael.png'); }
-#notif-scoiatael::after { content: "Opponent used the Scoia'tael faction perk to go first."; }
 
 #notif-skellige-op{ background-image: url('img/icons/notif_skellige.png'); }
-#notif-skellige-op::after { content: "Opponent Skellige Ability Triggered!"; }
 
 #notif-skellige-me{ background-image: url('img/icons/notif_skellige.png'); }
-#notif-skellige-me::after { content: "Skellige Ability Triggered!"; }
 
 /* ------- card preview ------------- */
 
 .card-preview { position: relative; z-index: 80;}
 .card-preview > .card-lg {
 	position: absolute;
-	top: 11.95vw;
-	left: 80.3vw;
+	top: calc(11.95 * var(--vw));
+	left: calc(80.3 * var(--vw));
 }
 .card-preview > .card-description {
-	top: 43.1vw;
-	left: 67.95vw;
+	top: calc(43.1 * var(--vw));
+	left: calc(67.95 * var(--vw));
 }
 
 .card-lg {
-	height: 30.4vw;
-	width: 16.1vw;
-	border-radius: 1.5vw;
+	height: calc(30.4 * var(--vw));
+	width: calc(16.1 * var(--vw));
+	border-radius: calc(1.5 * var(--vw));
 	
 	background-size: contain;
 	background-position:center;
@@ -270,24 +276,24 @@ html {
 .card-description {
 	position: absolute;
 
-	height: 7.87vw;
-	width: 29.12vw;
+	height: calc(7.87 * var(--vw));
+	width: calc(29.12 * var(--vw));
 	background-color: rgba(20,20,20, 0.95);
 	color: tan;
 	text-align: center;
 	pointer-events : none;
-	border: .1vw solid #ffffff57;
-    border-width: .1vw 0;
+	border: calc(.1 * var(--vw)) solid #ffffff57;
+    border-width: calc(.1 * var(--vw)) 0;
 }
 
 .card-description > * { position: relative; }
 
 .card-description > div {
-	top: 1.0vw;
-	left: 0.9vw;
-	width: 1.95vw;
-	height: 1.95vw;
-	margin-bottom: -1.9vw;
+	top: calc(1.0 * var(--vw));
+	left: calc(0.9 * var(--vw));
+	width: calc(1.95 * var(--vw));
+	height: calc(1.95 * var(--vw));
+	margin-bottom: calc(-1.9 * var(--vw));
 	background-size:cover;
 	background-position:center;
 }
@@ -295,14 +301,14 @@ html {
 .card-description > h1 {
 	font-weight: bold;
 	
-	top: 0.5vw;
+	top: calc(0.5 * var(--vw));
 	left: 16%;
 	height: 16%;
 	width: 70%;
-	margin-bottom: -2.1vw;
+	margin-bottom: calc(-2.1 * var(--vw));
 	text-transform: capitalize;
 	
-	font-size: 1vw;
+	font-size: calc(1 * var(--vw));
 }
 
 .card-description > p {
@@ -311,7 +317,7 @@ html {
 	width: 90%;
 	height:50%;
 	
-	font-size: 0.9vw;
+	font-size: calc(0.9 * var(--vw));
 }
 
 /* ------- carousel ------------- */
@@ -319,7 +325,7 @@ html {
 #carousel {
 	position:absolute;
 	width: 100%;
-	height: calc(100vw * 1080 / 1920);
+	height: calc(calc(100 * var(--vw)) * 1080 / 1920);
 	z-index:90;
 }
 
@@ -347,43 +353,43 @@ html {
 	
 	--carousel-trans-time: 0s;
 	--magnitude: 0;
-	translate: calc(var(--magnitude) * 1vw);
+	translate: calc(var(--magnitude) * calc(1 * var(--vw)));
 	transition: translate calc(var(--carousel-trans-time) - 0.1s);
 	transition-timing-function: ease-in;
 }
 
 #carousel > :nth-child(1) > :not(:nth-child(3)):hover {
-	box-shadow: 0 0 1vw goldenrod;
+	box-shadow: 0 0 calc(1 * var(--vw)) goldenrod;
 }
 
 #carousel > :nth-child(1) > .card-lg {
-	translate: calc(var(--magnitude) * 1vw);
+	translate: calc(var(--magnitude) * calc(1 * var(--vw)));
 	transition: translate var(--carousel-trans-time), box-shadow 0.1s;
 	transition-timing-function: ease-in;
 }
 
 /*  middle  (3)  */
 #carousel > :nth-child(1) > :nth-child(3){
-	border: .3vw solid goldenrod;
-	box-shadow: 0 0 4vw goldenrod;
+	border: calc(.3 * var(--vw)) solid goldenrod;
+	box-shadow: 0 0 calc(4 * var(--vw)) goldenrod;
 	background-origin: border-box;
 	transition: box-shadow 0.1s, translate calc(var(--carousel-trans-time) - 0.05s);
 }
 #carousel > :nth-child(1) > :nth-child(3):hover {
-	box-shadow: 0 0 2vw goldenrod;
+	box-shadow: 0 0 calc(2 * var(--vw)) goldenrod;
 }
 
 /*  adjacent (2, 4)  */
 #carousel > :nth-child(1) > :nth-child(2n) {
-	width: 13.75vw;
-	height: 25.9vw;
+	width: calc(13.75 * var(--vw));
+	height: calc(25.9 * var(--vw));
 	transition: box-shadow 0.1s, translate calc(var(--carousel-trans-time) + 0.05s);
 }
 
 /* outer most (1, 5) */
 #carousel > :nth-child(1) > :nth-child(4n - 3) {
-	width: 11.3vw;
-	height: 21.3vw;
+	width: calc(11.3 * var(--vw));
+	height: calc(21.3 * var(--vw));
 	transition: box-shadow 0.1s, translate calc(var(--carousel-trans-time) + .2s);
 }
 
@@ -411,11 +417,11 @@ html {
     width: 100%;
     height: 7.5%;
     top: 12%;
-    font-size: 1.75vw;
+    font-size: calc(1.75 * var(--vw));
     line-height: 250%;
     background-color: rgba(10,10,10,.95);
     text-align: center;
-    box-shadow: 0 0 1vw #ffffff54;
+    box-shadow: 0 0 calc(1 * var(--vw)) #ffffff54;
 }
 
 /* --------------------- popup ---------------------------  */
@@ -423,7 +429,7 @@ html {
 #popup {
 	position: absolute;
     width: 100%;
-    height: calc(100vw * 1080 / 1920);
+    height: calc(calc(100 * var(--vw)) * 1080 / 1920);
     background-color: rgba(10,10,10,.95);
     z-index: 1000;
     /* background-image: url(img/boardtest10.png); */
@@ -434,14 +440,14 @@ html {
 #popup > div {
     margin-top: -89px;
     width: 26.5%;
-    border: .2vw solid rgb(60,60,60);
-    padding: 0 0.5vw;
+    border: calc(.2 * var(--vw)) solid rgb(60,60,60);
+    padding: 0 calc(0.5 * var(--vw));
     background-color: rgb(20,20,20);
 }
 
 #popup h3 {
     display: block;
-    font-size: 1.05vw;
+    font-size: calc(1.05 * var(--vw));
     text-transform: uppercase;
     color: grey;
     text-align: center;
@@ -450,8 +456,8 @@ html {
 
 #popup p {
     text-align: center;
-    font-size: 1.23vw;
-    padding-top: .6vw;
+    font-size: calc(1.23 * var(--vw));
+    padding-top: calc(.6 * var(--vw));
     color: tan;
 }
 
@@ -460,26 +466,26 @@ html {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: .2vw;
+    padding: calc(.2 * var(--vw));
     min-width: 10%;
     width: fit-content;
-    margin: -1.4vw auto 0;
-    border: .2vw solid rgb(25,25,25);
+    margin: calc(-1.4 * var(--vw)) auto 0;
+    border: calc(.2 * var(--vw)) solid rgb(25,25,25);
     background-color: black;
-    top: 1.3vw;
+    top: calc(1.3 * var(--vw));
 }
 
 #popup button {
 
     display: inline-block;
     width: auto;
-    height: 1.8vw;
-    border: .2vw solid rgb(40,40,40);
+    height: calc(1.8 * var(--vw));
+    border: calc(.2 * var(--vw)) solid rgb(40,40,40);
     background-color: rgb(20,20,20);
-    font-size: 1vw;
-    text-shadow: 1vw 1vw 1vw black;
+    font-size: calc(1 * var(--vw));
+    text-shadow: calc(1 * var(--vw)) calc(1 * var(--vw)) calc(1 * var(--vw)) black;
 	text-transform: capitalize;
-	margin: 0 0.3vw;
+	margin: 0 calc(0.3 * var(--vw));
 	transition: color 0.1s, border-color 0.1s;
 }
 #popup button:hover {
@@ -496,7 +502,7 @@ html {
 
 #end-screen {
 	width: 100%;
-	height: calc(100vw * 1080 / 1920);
+	height: calc(calc(100 * var(--vw)) * 1080 / 1920);
 	position: absolute;
 	z-index: 1000;
 	background-color: rgba(10,10,10,0.95);
@@ -528,20 +534,20 @@ html {
 }
 
 #end-screen tbody :first-child th {
-	font-size: .9vw;
+	font-size: calc(.9 * var(--vw));
 	text-align: center;
 	color: darkslategrey;
 	color: rgb(100,100,100);
 }
 
 #end-screen td {
-	font-size: 1.7vw;
+	font-size: calc(1.7 * var(--vw));
 	text-align: center;
 	color: rgb(180,180,180);
 }
 
 #end-screen tr :first-child {
-	font-size: 1.2vw;
+	font-size: calc(1.2 * var(--vw));
 	text-align: right;
 	color:darkorange;
 	padding-right: 5%;
@@ -552,26 +558,26 @@ html {
 	left: 30.1%;
 	width: 41%;
 	height: 3%;
-	font-size: 1.21vw;
+	font-size: calc(1.21 * var(--vw));
 	color: rgb(180,180,180);
 }
 
 #end-screen button {
     position: absolute;
-    height: 3vw;
-    width: 10vw;
+    height: calc(3 * var(--vw));
+    width: calc(10 * var(--vw));
     top: 87%;
 	font-family: Arial Narrow;
-    font-size: 1.5vw;
+    font-size: calc(1.5 * var(--vw));
     color: goldenrod;
     background-color: #4c390a66;
-    border: .2vw solid #1d180b;
-    border-radius: 0.1vw;
-    box-shadow: 0 0 .5vw #6d5210;
+    border: calc(.2 * var(--vw)) solid #1d180b;
+    border-radius: calc(0.1 * var(--vw));
+    box-shadow: 0 0 calc(.5 * var(--vw)) #6d5210;
 }
 
 #end-screen button:hover {
-	box-shadow: 0 0 2vw #6d5210;
+	box-shadow: 0 0 calc(2 * var(--vw)) #6d5210;
 }
 
 #end-screen button:nth-of-type(1) { left: 31%; }
@@ -590,7 +596,7 @@ html {
 	/*new values*/
 	overflow-y: visible;
 	position:absolute;
-	height: calc(100vw * 1080 / 1920);
+	height: calc(calc(100 * var(--vw)) * 1080 / 1920);
 }
 
 .panel div, .panel section, .panel span{
@@ -664,7 +670,7 @@ main { background-image: url('img/boardtest8.png'); }
 }
 
 .leader-box > .leader-container:hover {
-	box-shadow: 0 0 1vw goldenrod;
+	box-shadow: 0 0 calc(1 * var(--vw)) goldenrod;
 	box-sizing: border-box;
 }
 
@@ -672,7 +678,7 @@ main { background-image: url('img/boardtest8.png'); }
 	position:absolute;
 	height: 98%;
 	width: 95%;
-	border-radius: 0.6vw;
+	border-radius: calc(0.6 * var(--vw));
 }
 
 .leader-active {
@@ -695,7 +701,7 @@ main { background-image: url('img/boardtest8.png'); }
 }
 #leader-op .leader-container::after {
 	left: unset;
-	bottom: -2.2vw;;
+	bottom: calc(-2.2 * var(--vw));;
 }
 
 #leader-me {
@@ -703,7 +709,7 @@ main { background-image: url('img/boardtest8.png'); }
 }
 #leader-me .leader-container::after {
 	left: unset;
-	bottom: -2.2vw;;
+	bottom: calc(-2.2 * var(--vw));;
 }
 
 .stats {
@@ -714,7 +720,7 @@ main { background-image: url('img/boardtest8.png'); }
 }
 
 .current-turn {
-	box-shadow: -3vw 0px 1vw 0.1vw goldenrod;
+	box-shadow: calc(-3 * var(--vw)) 0px calc(1 * var(--vw)) calc(0.1 * var(--vw)) goldenrod;
 }
 
 #stats-op {
@@ -779,7 +785,7 @@ main { background-image: url('img/boardtest8.png'); }
 	
 	color: black;
 	text-shadow: 0 0 5px white;
-	font-size: 2.3vw;
+	font-size: calc(2.3 * var(--vw));
 	font-weight: bold;
 	
 	background-size: contain;
@@ -814,7 +820,7 @@ main { background-image: url('img/boardtest8.png'); }
 	width: 17%;
 	margin-bottom: -9%;
 
-	font-size: 1.7vw;
+	font-size: calc(1.7 * var(--vw));
 	font-weight: bold;
 	padding-left: 7%;
 	
@@ -871,7 +877,7 @@ main { background-image: url('img/boardtest8.png'); }
 	margin-bottom: -6%;
 	overflow: hidden;
 	white-space: nowrap;
-	font-size: 1.1vw;
+	font-size: calc(1.1 * var(--vw));
 	font-weight: bold;
 	
 	/*font-family: Arial Narrow, sans-serif;*/
@@ -891,7 +897,7 @@ main { background-image: url('img/boardtest8.png'); }
 	text-transform:capitalize;
 	
 	color: tan;
-	font-size: .95vw;
+	font-size: calc(.95 * var(--vw));
 	/*font-family: Arial Narrow, sans-serif;*/
 }
 
@@ -906,7 +912,7 @@ main { background-image: url('img/boardtest8.png'); }
 	top: 87%;
 	
 	color: tan;
-	font-size: 1.5vw;
+	font-size: calc(1.5 * var(--vw));
 	font-weight: bold;
 	text-shadow: 1px 1px 2px black;
 }
@@ -918,11 +924,11 @@ main { background-image: url('img/boardtest8.png'); }
 	width:20%;
 	height: 4%;
 	
-	font-size: 2vw;
+	font-size: calc(2 * var(--vw));
 	font-weight: bold;
 	
-	border: .1vw solid goldenrod;
-	border-radius: .5vw;
+	border: calc(.1 * var(--vw)) solid goldenrod;
+	border-radius: calc(.5 * var(--vw));
 	background-color: rgba(20,20,20,.9);
 }
 #pass-button:hover {
@@ -973,7 +979,7 @@ main { background-image: url('img/boardtest8.png'); }
 	top:7%;
 	height: 95%;
 	margin-bottom: -12.65%;
-	font-size: 1.8vw;
+	font-size: calc(1.8 * var(--vw));
 	
 	color: black;
 	text-shadow: 0 0 5px white;
@@ -1026,22 +1032,21 @@ main { background-image: url('img/boardtest8.png'); }
 }
 
 .row-selectable:hover {
-	box-shadow: 0 0 .25vw rgba(255,255,0, 1);
-	/*outline: .25vw solid rgba(255,255,0, 0.5);*/
+	box-shadow: 0 0 calc(.25 * var(--vw)) rgba(255,255,0, 1);
+	/*outline: calc(.25 * var(--vw)) solid rgba(255,255,0, 0.5);*/
 	box-sizing: border-box;
 }
 
 .card-selectable > .card:hover {
-	/*box-shadow: 0 0 .2vw rgba(255,255,0, 0.5);*/
-	border: .12vw outset goldenrod;
-	border-radius: .3vw;
-	margin-bottom: 1vw;
+	outline: calc(.12 * var(--vw)) solid goldenrod;
+	border-radius: calc(.3 * var(--vw));
+	box-shadow: 0 0 calc(.9 * var(--vw)) goldenrod;
 	z-index: 1;
 }
 .card-selectable > .card:hover::after
 {
 	pointer-events: all;
-	bottom: -1.9vw;
+	bottom: calc(-1.9 * var(--vw));
 }
 
 /*
@@ -1093,11 +1098,11 @@ main { background-image: url('img/boardtest8.png'); }
 }
 
 .grave:not(:empty):hover {
-	box-shadow: 0 0 .75vw goldenrod;
+	box-shadow: 0 0 calc(.75 * var(--vw)) goldenrod;
 	box-sizing: border-box;
 }
 .grave:not(:empty)::after{
-	left: -0.4vw;
+	left: calc(-0.4 * var(--vw));
 }
 .grave:empty::after {
 	visibility: hidden;
@@ -1107,25 +1112,25 @@ main { background-image: url('img/boardtest8.png'); }
 	position: relative;
 	display: inline-block;
 	
-	height: 6.675vw;
-	width: 4.45vw;
+	height: calc(6.675 * var(--vw));
+	width: calc(4.45 * var(--vw));
 
 	background-size:contain;
 	background-repeat: no-repeat;
-	box-shadow: -.1vw -.1vw .5vw rgba(20,20,20, 0.5);
+	box-shadow: calc(-.1 * var(--vw)) calc(-.1 * var(--vw)) calc(.5 * var(--vw)) rgba(20,20,20, 0.5);
 }
 
 .deck-counter {
 	position: relative;
 	background-color: rgba(20,20,20, 0.8);
 	
-	width: 3vw;
-	height: 2vw;
+	width: calc(3 * var(--vw));
+	height: calc(2 * var(--vw));
 	
 	z-index: 1;
 	
 	color:tan;
-	font-size: 1.3vw;
+	font-size: calc(1.3 * var(--vw));
 }
 
 .cardpile .deck-card {
@@ -1145,7 +1150,7 @@ main { background-image: url('img/boardtest8.png'); }
 #deck-customization {
 	position: absolute;
 	width: 100%;
-	height: calc(100vw * 1080 / 1920);
+	height: calc(calc(100 * var(--vw)) * 1080 / 1920);
 	background-color: rgba(10,10,10,.95);
 	z-index: 85;
 }
@@ -1159,7 +1164,7 @@ main { background-image: url('img/boardtest8.png'); }
 
 #deck-customization h1 {
     position: absolute;
-    font-size: 1.45vw;
+    font-size: calc(1.45 * var(--vw));
     color: #dedede;
     line-height: 220%;
     text-transform: capitalize;
@@ -1175,7 +1180,7 @@ main { background-image: url('img/boardtest8.png'); }
 
 #faction-description {
 	position: absolute;
-	font-size: 1.14vw;
+	font-size: calc(1.14 * var(--vw));
 	color: #ab977c;
 	top: 9.45%;
 	left: 20.2%;
@@ -1185,7 +1190,7 @@ main { background-image: url('img/boardtest8.png'); }
 
 .deck-options{
 	position: absolute;
-	font-size: 1vw;
+	font-size: calc(1 * var(--vw));
 	color: white;
 	top: 15%;
 }
@@ -1210,14 +1215,14 @@ main { background-image: url('img/boardtest8.png'); }
 	width: 34.4%;
 	height: 68%;
 	overflow-y: scroll;
-	padding: .1vw 1.1vw;
+	padding: calc(.1 * var(--vw)) calc(1.1 * var(--vw));
 	display: flex;
 	flex-wrap:wrap;
 	justify-content: space-between;
 }
 
 .card-array .card-lg:hover {
-	box-shadow: 0 0 1vw goldenrod;
+	box-shadow: 0 0 calc(1 * var(--vw)) goldenrod;
 }
 
 .card-array .card-lg.empty
@@ -1236,10 +1241,10 @@ main { background-image: url('img/boardtest8.png'); }
 }
 
 .card-array .card-lg {
-    width: 9.88vw;
-    height: 18.45vw;
-    border-radius: 1vw;
-	margin-bottom: 0.75vw;
+    width: calc(9.88 * var(--vw));
+    height: calc(18.45 * var(--vw));
+    border-radius: calc(1 * var(--vw));
+	margin-bottom: calc(0.75 * var(--vw));
 }
 
 .card-array .card-lg > div {
@@ -1248,9 +1253,9 @@ main { background-image: url('img/boardtest8.png'); }
 	left: 76%;
 	width: 20%;
 	height: 7%;
-	font-size: 1.2vw;
+	font-size: calc(1.2 * var(--vw));
 	color: #5f4923;
-	padding-left: 1.7vw;
+	padding-left: calc(1.7 * var(--vw));
 	background-image: url('img/icons/preview_count.png');
 	background-position: left;
 	background-repeat: no-repeat;
@@ -1266,7 +1271,7 @@ main { background-image: url('img/boardtest8.png'); }
 }
 
 #card-leader p {
-	font-size: 1.1vw;
+	font-size: calc(1.1 * var(--vw));
 	text-align: center;
 	color: #8f6c36;
 	line-height: 0%;
@@ -1279,10 +1284,10 @@ main { background-image: url('img/boardtest8.png'); }
 	margin-top: 24.5%;
 	
 	background-size: contain;
-	border-radius: .5vw;
+	border-radius: calc(.5 * var(--vw));
 }
 #card-leader > div:hover {
-	box-shadow: 0 0 .75vw goldenrod;
+	box-shadow: 0 0 calc(.75 * var(--vw)) goldenrod;
 }
 
 #deck-stats {
@@ -1295,22 +1300,22 @@ main { background-image: url('img/boardtest8.png'); }
 
 #deck-stats > p:nth-child(odd) {
 	color: #82735f;
-	font-size: 1.05vw;
+	font-size: calc(1.05 * var(--vw));
 	text-align: center;
 	margin-bottom: -6.75%;
 }
 
 #deck-stats > p:nth-child(even) {
-	font-size: 1.2vw;
+	font-size: calc(1.2 * var(--vw));
 	text-align: left;
 	color: #9f7d3e;
-	padding-left: 2.3vw;
-	margin-left: 3.95vw;
+	padding-left: calc(2.3 * var(--vw));
+	margin-left: calc(3.95 * var(--vw));
 	margin-bottom: -6.75%;
 	
 	background-repeat: no-repeat;
 	background-position: left;
-	background-size: 2.5vw;
+	background-size: calc(2.5 * var(--vw));
 }
 
 #deck-stats > p:nth-child(2) { background-image: url('img/icons/deck_stats_count.png'); }
@@ -1325,28 +1330,28 @@ main { background-image: url('img/boardtest8.png'); }
 	left: 46.65%;
 	width: 6%;
 	height: 3%;
-	font-size: 0.98vw;
+	font-size: calc(0.98 * var(--vw));
 	white-space: nowrap;
 	color: white;
 	background-color: rgb(20,20,20);
-	border: 0.1vw ridge rgb(30,30,30);
+	border: calc(0.1 * var(--vw)) ridge rgb(30,30,30);
 }
 #start-game:hover {
-	box-shadow: 0 0 0.75vw white;
+	box-shadow: 0 0 calc(0.75 * var(--vw)) white;
 }
 
 #opponent-preview {
     position: absolute;
-    top: 50.9vw;
+    top: calc(50.9 * var(--vw));
 	width: 100%;
-    left: -0.3vw;
+    left: calc(-0.3 * var(--vw));
     justify-content: center;
     align-items: center;
 	flex-direction: column;
 }
 #opponent-preview>div>p {
 	color: #82735f;
-	font-size: 1.05vw;
+	font-size: calc(1.05 * var(--vw));
 	text-align: center;
 	margin-bottom: 2.5%;
 	margin-top: 0;
@@ -1356,20 +1361,20 @@ main { background-image: url('img/boardtest8.png'); }
 #op-preview-faction {
 	background-size: contain;
     background-repeat: no-repeat;
-	height: 2vw;
-	width: 	2vw;
+	height: calc(2 * var(--vw));
+	width: 	calc(2 * var(--vw));
 }
 #op-preview-faction {
 	/* visibility: hidden; */
 }
 #op-preview-leader::after {
-	left: 46vw;
-	bottom: -1.5vw;
+	left: calc(46 * var(--vw));
+	bottom: calc(-1.5 * var(--vw));
 }
 #op-preview-leader>p {
-	font-size: 1vw;
+	font-size: calc(1 * var(--vw));
 	color:white;
-	margin: 0.2vw;
+	margin: calc(0.2 * var(--vw));
 }
 #op-preview-leader:hover {
 	text-decoration: underline;
@@ -1380,19 +1385,19 @@ main { background-image: url('img/boardtest8.png'); }
 	border: none;
 	background-repeat: no-repeat;
 	background-size: contain;
-	width: 1.8vw;
-	height: 1.9vw;
+	width: calc(1.8 * var(--vw));
+	height: calc(1.9 * var(--vw));
 }
 #op-preview-open {
 	background-image: url("svg/view.svg");	
-    width: 1.5vw !important;
-    height: 1.5vw !important;
+    width: calc(1.5 * var(--vw)) !important;
+    height: calc(1.5 * var(--vw)) !important;
 }
 #op-preview-open:hover {
 	filter: drop-shadow(0px 0px 3px rgba(255, 255, 255, 0.5));
 }
 #op-preview-open::after {
-	left: -2.9vw;
+	left: calc(-2.9 * var(--vw));
 }
 #op-preview-clear {
 	background-image: url("svg/trash.svg");
@@ -1401,14 +1406,14 @@ main { background-image: url('img/boardtest8.png'); }
 	filter: drop-shadow(0 0 3px red);
 }
 #op-preview-clear::after {
-	left: -2.9vw;
+	left: calc(-2.9 * var(--vw));
 }
 
 .card-contianer-title {
 	position: absolute;
 	width: 10%;
 	height: 3%;
-	font-size: 1.3vw;
+	font-size: calc(1.3 * var(--vw));
 	color: #959595;
 }
 
@@ -1429,13 +1434,13 @@ main { background-image: url('img/boardtest8.png'); }
 	width: auto;*/
 	/*width: calc(100% * 775 / 410);*/
 	
-	height: 6.35vw;
-	width: 4.45vw;
+	height: calc(6.35 * var(--vw));
+	width: calc(4.45 * var(--vw));
 	
 	background-size:contain;
 	background-repeat: no-repeat;
 	
-	box-shadow: -.1vw -.1vw .5vw rgba(20,20,20, 0.5);
+	box-shadow: calc(-.1 * var(--vw)) calc(-.1 * var(--vw)) calc(.5 * var(--vw)) rgba(20,20,20, 0.5);
 	
 	display: inline-block;
 	
@@ -1471,15 +1476,15 @@ main { background-image: url('img/boardtest8.png'); }
 	left: 7%;
 	width: 50%;
 	heighth:  50%;
-	font-size: 1vw;
+	font-size: calc(1 * var(--vw));
 	font-weight: bold;
 	color: black;
-	text-shadow: 0 0 .1vw white;
+	text-shadow: 0 0 calc(.1 * var(--vw)) white;
 }
 
 .hero > div:nth-child(1) > div {
 	color: white;
-	text-shadow: 0 0 .1vw black;
+	text-shadow: 0 0 calc(.1 * var(--vw)) black;
 }
 
 
@@ -1500,7 +1505,7 @@ main { background-image: url('img/boardtest8.png'); }
 	height: 22%;
 	margin-bottom: -32%;
 	
-	font-size: 1vw;
+	font-size: calc(1 * var(--vw));
 	/*border: 1px solid red;*/
 }
 
@@ -1524,7 +1529,7 @@ main { background-image: url('img/boardtest8.png'); }
 	margin: 0 1px;
 	flex-shrink: 0;
 	/*margin: 0 -10px;*/
-	/*margin: 0 calc((100% - (4.45vw * 14)) / 26);*/
+	/*margin: 0 calc((100% - (calc(4.45 * var(--vw)) * 14)) / 26);*/
 }
 
 /* ---------- tooltip -------------  */
@@ -1534,10 +1539,10 @@ main { background-image: url('img/boardtest8.png'); }
 	background-color: rgba(10,10,10,.95);
 	color: goldenrod;
 	font-family: Arial Narrow, sans-serif;
-	font-size: 1.2vw;
+	font-size: calc(1.2 * var(--vw));
 	position: absolute;
 	padding: 1px 5px 2px 5px;
-	bottom: -2vw;
+	bottom: calc(-2 * var(--vw));
 	left: var(--title-left);
 	white-space: nowrap;
 	box-shadow: 1px 1px 4px #242424;
@@ -1568,3 +1573,169 @@ main { background-image: url('img/boardtest8.png'); }
 .noclick {
 	pointer-events: none;
 }
+
+/* ======================= Gwent Classic 2.0 additions ======================= */
+
+body {
+	font-family: "Arial Narrow", "Bahnschrift SemiCondensed", "Bahnschrift", sans-serif;
+}
+
+/* side bars around the 16:9 stage: blurred board instead of plain black */
+body::before {
+	content: "";
+	position: fixed;
+	inset: -40px;
+	background: url('img/board.jpg') center / cover no-repeat;
+	filter: blur(24px) brightness(0.35);
+	z-index: -1;
+}
+#stage { background: #000; box-shadow: 0 0 40px #000; }
+
+/* large cards: French name printed on the parchment (pictures without English text) */
+.card-lg { position: relative; }
+.lang-fr .card-lg[data-lg-name], .lang-fr #card-leader > div[data-lg-name] { container-type: size; }
+.lang-fr .card-lg[data-lg-name]:not([data-lg-name=""])::after,
+.lang-fr #card-leader > div[data-lg-name]:not([data-lg-name=""])::after {
+	content: attr(data-lg-name);
+	position: absolute;
+	left: 7%;
+	right: 7%;
+	top: 77.6%;
+	height: 9.5%;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	text-align: center;
+	font-family: "Bahnschrift SemiBold SemiConden", "Bahnschrift", "Arial Narrow", sans-serif;
+	font-stretch: semi-condensed;
+	font-weight: bold;
+	font-size: 6.9cqw;
+	line-height: 1.12;
+	color: #2e261c;
+	text-shadow: 0 0 0.3cqw rgba(255, 250, 235, 0.6);
+	pointer-events: none;
+	white-space: normal;
+	overflow-wrap: break-word;
+}
+
+/* card zoom (right click, two-finger tap, long press) */
+#zoom {
+	position: absolute;
+	inset: 0;
+	z-index: 5000;
+	background-color: rgba(8, 8, 8, 0.86);
+}
+#zoom > .card-lg {
+	position: absolute;
+	left: calc(31 * var(--vw));
+	top: calc(6 * var(--vw));
+	width: calc(22.5 * var(--vw));
+	height: calc(42.5 * var(--vw));
+	border-radius: calc(1.2 * var(--vw));
+	box-shadow: 0 0 calc(2 * var(--vw)) rgba(218, 165, 32, 0.35);
+}
+#zoom > .card-description {
+	left: calc(55 * var(--vw));
+	top: calc(27 * var(--vw));
+	width: calc(26 * var(--vw));
+	height: auto;
+	min-height: calc(7.87 * var(--vw));
+	padding-bottom: calc(1 * var(--vw));
+}
+#zoom > .card-description > p { height: auto; }
+#zoom > .zoom-hint {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	bottom: calc(1.2 * var(--vw));
+	text-align: center;
+	font-size: calc(0.95 * var(--vw));
+	color: #8a7a62;
+	margin: 0;
+}
+
+/* Decoy: cards that can be taken back */
+.gc-target {
+	animation: gc-pulse 1.1s ease-in-out infinite;
+	border-radius: calc(.3 * var(--vw));
+}
+@keyframes gc-pulse {
+	0%, 100% { box-shadow: 0 0 calc(.3 * var(--vw)) calc(.08 * var(--vw)) rgba(218, 165, 32, 0.55); }
+	50% { box-shadow: 0 0 calc(1.1 * var(--vw)) calc(.25 * var(--vw)) rgba(255, 215, 90, 0.95); }
+}
+
+/* end screen title (pictures without English text) */
+.end-draw { background-image: url('img/icons/end_draw_blank.png'); }
+.end-win  { background-image: url('img/icons/end_win_blank.png');  }
+.end-lose { background-image: url('img/icons/end_lose_blank.png'); }
+#end-screen > :nth-child(1)::after {
+	content: attr(data-text);
+	position: absolute;
+	left: 0;
+	width: 100%;
+	top: 55.5%;
+	height: 14%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: "Bahnschrift SemiBold SemiConden", "Bahnschrift", "Arial Narrow", sans-serif;
+	font-weight: bold;
+	font-size: calc(1.75 * var(--vw));
+}
+#end-screen > .end-win::after { color: #c08a45; }
+#end-screen > .end-lose::after { color: #a31b1b; }
+#end-screen > .end-draw::after { color: #9b9b9b; }
+
+/* difficulty selector and language switch (deck menu) */
+#difficulty {
+	position: absolute;
+	top: 2.2%;
+	left: 2%;
+	gap: calc(.4 * var(--vw));
+	font-size: calc(1 * var(--vw));
+	color: #8f6c36;
+	z-index: 2;
+}
+#difficulty > span { margin-right: calc(.4 * var(--vw)); }
+#difficulty > button, #toggle-language {
+	position: relative;
+	font-family: inherit;
+	font-size: calc(0.95 * var(--vw));
+	color: #b9a17a;
+	background-color: rgb(20,20,20);
+	border: calc(0.1 * var(--vw)) solid rgb(45,45,45);
+	padding: calc(.2 * var(--vw)) calc(.7 * var(--vw));
+	border-radius: calc(.2 * var(--vw));
+}
+#difficulty > button:hover, #toggle-language:hover { box-shadow: 0 0 calc(0.5 * var(--vw)) goldenrod; }
+#difficulty > button.selected {
+	color: #ffd479;
+	border-color: goldenrod;
+	box-shadow: inset 0 0 calc(0.4 * var(--vw)) rgba(218,165,32,.6);
+}
+#difficulty > button[data-title]:hover::after { bottom: calc(-2.3 * var(--vw)); left: 0; }
+#toggle-language {
+	position: absolute;
+	width: auto;
+	height: auto;
+	font-weight: bold;
+	letter-spacing: calc(.05 * var(--vw));
+}
+#toggle-language.deck-menu {
+	top: 2.2%;
+	right: 2%;
+	z-index: 86;
+}
+#toggle-language:not(.deck-menu) { display: none; }
+#toggle-language[data-title]:hover::after { left: auto; right: 0; }
+
+#popup p { line-height: 1.35; }
+
+/* longer French labels */
+.lang-fr .card-description > h1, .lang-fr #faction-title h1, .lang-fr #popup button { text-transform: none; }
+.lang-fr .card-description > h1::first-letter { text-transform: uppercase; }
+.card-contianer-title { white-space: nowrap; width: auto; }
+#upload-deck { left: auto; right: 59%; }
+#change-faction { left: 50%; transform: translateX(-50%); }
+#download-deck { left: 59%; }
+#start-game { width: auto; min-width: 6%; padding: 0 calc(0.6 * var(--vw)); left: 50%; transform: translateX(-50%); }

@@ -91,3 +91,13 @@ function toInteger(str)
 function randomInt(n)  {
 	return Math.floor(Math.random() * n);
 }
+
+// Length in stage units: 1 = 1% of the 16:9 stage width (see --vw in style.css)
+function vw(n) {
+	return "calc(" + n + " * var(--vw))";
+}
+
+// Pixel size of 1% of the stage width
+function stageUnitPx() {
+	return document.getElementById("stage").getBoundingClientRect().width / 100;
+}
