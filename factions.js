@@ -6,7 +6,7 @@ var factions = {
 		factionAbility: player => game.roundStart.push( async () => {
 			// FIX: drawing from an empty deck threw and froze the start of the round
 			if (game.roundCount > 1 && game.roundHistory[game.roundCount-2]?.winner === player && player.deck.cards.length > 0) {
-				player.deck.draw(player.hand);
+				await player.deck.draw(player.hand);
 				await ui.notification("north", 1200);
 			}
 			return false;

@@ -129,7 +129,8 @@ var ability_dict = {
 			{
 				cardName = card['muster'];
 			}
-			let pred = c => c.name.startsWith(cardName);
+			// cards being drawn right now are not in the deck any more
+			let pred = c => c.name.startsWith(cardName) && !c.gcDrawing;
 			// TW3 rule: Muster only pulls the cards from the deck (copies in hand stay in hand)
 			let units = card.holder.deck.getCards(pred).map( x => [card.holder.deck, x] );
 			if (units.length === 0)
@@ -379,7 +380,7 @@ var ability_dict = {
 			if (card.holder.controller instanceof ControllerAI) {
 				let cards = card.holder.controller.discardOrder(card).splice(0,2).filter(c => c.basePower < 7);
 				await Promise.all(cards.map(async c => await board.toGrave(c, card.holder.hand)));
-				card.holder.deck.draw(card.holder.hand);
+				await card.holder.deck.draw(card.holder.hand);
 				return;
 			} else
 				Carousel.curr.exit();

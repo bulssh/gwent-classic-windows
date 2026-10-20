@@ -43,8 +43,13 @@ class ControllerAI {
 		weights.forEach(w => w.weight = Math.max(0, Number(w.weight) || 0));
 
 		if (level === "hard") {
-			await this.chooseHard(player, weights).action();
-			return;
+			const pick = this.chooseHard(player, weights);
+			if (pick) {
+				await pick.action();
+				return;
+			}
+			// same options as normal, but the best ones are much more likely
+			weights.forEach(w => w.weight = Math.pow(w.weight, 1.6));
 		}
 		if (level === "easy") {
 			// every playable option is almost equally likely
@@ -155,16 +160,8 @@ class ControllerAI {
 		// the opponent cannot answer any more: pass as soon as the AI leads
 		if (opCards === 0 && !op.leaderAvailable && lead > 0)
 			return pass;
-		// spies first: card advantage
-		if (spies.length)
-			return spies.sort((a, b) => a.card.power - b.card.power)[0];
-		// comfortable lead outside the last round, with more cards than the opponent: let them spend theirs
-		if (!decisive && lead >= 20 && myCards > opCards)
-			return pass;
-		// play the most valuable option (greedy, no randomness), avoiding heroes when a non-hero is as good
-		const best = plays[0];
-		const alt = plays.filter(o => !isHero(o) && !isSpy(o) && o.weight >= best.weight * 0.9)[0];
-		return alt || best;
+		// otherwise: sharpened weighted choice (see startTurn)
+		return null;
 	}
 	
 	// Collects data about card with the hightest power on the board
@@ -220,6 +217,8 @@ class ControllerAI {
 	
 	// Swaps a card from the hand with the deck if beneficial
 	redraw() {
+		if (Settings.difficulty.get() === "easy")
+			return; // easy: keeps its opening hand
 		const card = this.discardOrder({holder:this.player})[0];
 		if (card && card.power < 15) {
 			this.player.deck.swap(this.player.hand, card);
@@ -1105,6 +1104,8 @@ class Hand extends CardContainer {
 	
 	// Override
 	addCard(card, index){
+		if (!card)
+			return;
 		if (index) {
 			// FIX: the element used to be moved to the sorted position while the model kept 'index'
 			super.addCard(card, index);
@@ -1516,7 +1517,11 @@ class Board {
 		if (isString(dest))
 			dest = this.getRow(card, dest);
 		await translateTo(card, source ? source : null, dest);
-		await dest.addCard(source ? source.removeCard(card) : card);
+		// FIX: the card may have left its source during the animation (e.g. pulled by Muster): do not add "undefined"
+		const moved = source ? source.removeCard(card) : card;
+		if (!moved)
+			return;
+		await dest.addCard(moved);
 	}
 	
 	// Sends and translates a card from the source to a row name associated with the passed player

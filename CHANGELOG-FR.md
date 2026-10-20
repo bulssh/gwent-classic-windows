@@ -17,7 +17,8 @@ Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/g
 ## Difficulté
 - Facile / Normal / Difficile (en haut à gauche du menu du deck, mémorisé).
 - Normal ne passe plus quand il est mené (il offrait la manche).
-- Difficile joue sans hasard : espions en premier, victoire de manche au moindre coût, plus de Leurre/Espion joué « pour gagner », gestion de l'avantage de cartes.
+- Difficile joue sans hasard : espions en premier, victoire de manche au moindre coût, plus de Leurre/Espion joué « pour gagner », ne s'épuise pas en manche 1, gestion de l'avantage de cartes.
+- Facile garde sa main de départ et joue presque au hasard.
 
 ## Règles et bugs corrigés
 - Rassemblement ne prend plus que les cartes du paquet (règle TW3), plus celles de la main.
@@ -31,4 +32,4 @@ Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/g
 - Divers : retrait d'éléments déjà déplacés, fondus concurrents, sons qui pouvaient bloquer une attente, police de repli sur Windows (Arial Narrow absent), fautes de frappe.
 
 ## Application de bureau
-- Electron remplacé par **Tauri 2** (Rust + WebView2 de Windows) : installateur ~10× plus léger, mémoire réduite, fenêtre native (taille/position mémorisées, instance unique), export de deck par la vraie boîte « Enregistrer sous ».
+- Electron remplacé par **Tauri 2** (Rust + WebView2 intégré à Windows) : installateur de 52 Mo au lieu de 144 Mo, pas de second Chromium embarqué, fenêtre native (taille/position mémorisées, instance unique), export de deck par la vraie boîte « Enregistrer sous », installation sans droits administrateur et remplacement automatique de la version 1.x.
