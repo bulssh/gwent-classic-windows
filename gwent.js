@@ -21,22 +21,36 @@ class ControllerAI {
 		this.player = player;
 	}
 	
-	// Collects data and weighs options before taking a weighted random action
+	// Collects data and weighs options, then acts according to the difficulty level:
+	//  easy   - nearly random choice among the playable options
+	//  normal - weighted random choice (original behaviour, without passing while behind)
+	//  hard   - deterministic choice with round / card-advantage management
 	async startTurn(player){
 		if (player.opponent().passed && (player.winning || 
 				player.deck.faction === "nilfgaard" && player.total === player.opponent().total) ){
 			await player.passRound();
 			return;
 		}
+		const level = Settings.difficulty.get();
 		let data_max = this.getMaximums();
 		let data_board = this.getBoardData();
 		let weights = player.hand.cards.map(c => 
-			({weight: this.weightCard(c, data_max, data_board), action: async () => await this.playCard(c, data_max, data_board)}) );
+			({kind: "card", card: c, weight: this.weightCard(c, data_max, data_board), action: async () => await this.playCard(c, data_max, data_board)}) );
 		if (player.leaderAvailable)
-			weights.push( {weight: this.weightLeader(player.leader, data_max, data_board), action: async () => await player.activateLeader()} );
-		weights.push( {weight: this.weightPass(), action: async () => await player.passRound()} );
+			weights.push( {kind: "leader", weight: this.weightLeader(player.leader, data_max, data_board), action: async () => await player.activateLeader()} );
+		weights.push( {kind: "pass", weight: this.weightPass(), action: async () => await player.passRound()} );
 		// FIX: weights must never be negative or NaN (e.g. Eredin King of the Wild Hunt with no weather left returned -1)
 		weights.forEach(w => w.weight = Math.max(0, Number(w.weight) || 0));
+
+		if (level === "hard") {
+			await this.chooseHard(player, weights).action();
+			return;
+		}
+		if (level === "easy") {
+			// every playable option is almost equally likely
+			weights.forEach(w => w.weight = w.kind === "pass" ? w.weight / 3 : (w.weight > 0 ? 6 + Math.sqrt(w.weight) : 0));
+		}
+
 		let weightTotal = weights.reduce( (a,c) => a + c.weight, 0);
 		if (weightTotal === 0){
 			for (let i=0; i<player.hand.cards.length; ++i) {
@@ -48,14 +62,109 @@ class ControllerAI {
 			}
 			await player.passRound();
 		} else {
-			let rand = randomInt(weightTotal);
+			let rand = Math.random() * weightTotal;
 			for (var i=0; i < weights.length; ++i) {
 				rand -= weights[i].weight;
 				if (rand < 0)
 					break;
 			}
-			await weights[i].action();
+			await weights[Math.min(i, weights.length - 1)].action();
 		}
+	}
+
+	// Points an option adds to the AI's total right now (not its strategic value)
+	gain(o, player) {
+		if (o.kind === "leader")
+			return o.weight;
+		const c = o.card;
+		if (c.name === "Decoy")
+			return 0;
+		if (c.abilities.includes("spy"))
+			return -c.power;
+		if (c.name === "Commander's Horn")
+			return o.weight * 2;
+		if (c.row === "weather" || c.name === "Scorch" || c.name === "Mardroeme")
+			return o.weight;
+		const row = c.row === "agile" ? this.determineAgileRow(c) : board.getRow(c, c.row, player);
+		let pts = (c.abilities.some(a => a === "bond" || a === "morale" || a === "horn")) ? this.weightRowChangeTrue(c, row) : row.calcCardScore(c);
+		if (c.abilities.includes("muster")) {
+			let i = c.name.indexOf('-');
+			let name = c.muster || (i === -1 ? c.name : c.name.substring(0, i));
+			pts += player.deck.cards.filter(x => x.name.startsWith(name)).reduce((a, x) => a + x.basePower, 0);
+		}
+		if (c.abilities.includes("medic")) {
+			const units = player.grave.cards.filter(x => x.isUnit());
+			pts += units.reduce((a, x) => Math.max(a, x.abilities.includes("spy") ? 0 : x.basePower), 0);
+		}
+		if (c.abilities.some(a => a.startsWith("scorch")))
+			pts += Math.max(0, o.weight - row.calcCardScore(c));
+		return pts;
+	}
+
+	// Hard difficulty: picks the best option with a simple Gwent strategy
+	// (win rounds cheaply, keep card advantage, never waste cards on a lost cause)
+	chooseHard(player, options) {
+		const op = player.opponent();
+		const pass = options.find(o => o.kind === "pass");
+		const lead = player.total - op.total;                       // > 0 when the AI is ahead
+		const myCards = player.hand.cards.length;
+		const opCards = op.hand.cards.length;
+		const decisive = player.health === 1;                        // losing this round loses the game
+		const opDecisive = op.health === 1;
+		const plays = options.filter(o => o.kind !== "pass" && o.weight > 0);
+		plays.forEach(o => o.points = this.gain(o, player));
+		plays.sort((a, b) => b.weight - a.weight);
+		const isSpy = o => o.card && o.card.abilities.includes("spy");
+		const isHero = o => o.card && o.card.isHero();
+		const spies = plays.filter(isSpy);
+		if (!plays.length)
+			return pass;
+
+		// smallest set of cards (by points) reaching "need" points
+		const cardsToReach = need => {
+			const pos = plays.filter(o => o.points > 0).map(o => o.points).sort((a, b) => b - a);
+			let sum = 0;
+			for (let k = 0; k < pos.length; k++) {
+				sum += pos[k];
+				if (sum >= need)
+					return k + 1;
+			}
+			return Infinity;
+		};
+		// cheapest option giving at least "need" points (non-hero, low points first)
+		const cheapestWinner = need => plays.filter(o => o.points >= need && !isSpy(o))
+			.sort((a, b) => (isHero(a) - isHero(b)) || (a.kind === "leader") - (b.kind === "leader") || a.points - b.points)[0];
+
+		if (op.passed) {
+			const need = -lead + (player.deck.faction === "nilfgaard" && op.deck.faction !== "nilfgaard" ? 0 : 1);
+			// spies are free card advantage while the round is not decided yet
+			if (spies.length && !decisive && myCards > 1)
+				return spies[0];
+			const k = cardsToReach(need);
+			if (k === Infinity)
+				return decisive ? (plays.filter(o => !isSpy(o)).sort((a, b) => b.points - a.points)[0] || pass) : pass;
+			// winning would cost the whole hand while the opponent keeps more cards: keep them for later
+			if (!decisive && k > 3 && myCards - k < opCards)
+				return pass;
+			const one = cheapestWinner(need);
+			if (one)
+				return one;
+			return plays.filter(o => !isSpy(o)).sort((a, b) => b.points - a.points)[0] || pass;
+		}
+
+		// the opponent cannot answer any more: pass as soon as the AI leads
+		if (opCards === 0 && !op.leaderAvailable && lead > 0)
+			return pass;
+		// spies first: card advantage
+		if (spies.length)
+			return spies.sort((a, b) => a.card.power - b.card.power)[0];
+		// comfortable lead outside the last round, with more cards than the opponent: let them spend theirs
+		if (!decisive && lead >= 20 && myCards > opCards)
+			return pass;
+		// play the most valuable option (greedy, no randomness), avoiding heroes when a non-hero is as good
+		const best = plays[0];
+		const alt = plays.filter(o => !isHero(o) && !isSpy(o) && o.weight >= best.weight * 0.9)[0];
+		return alt || best;
 	}
 	
 	// Collects data about card with the hightest power on the board
@@ -281,6 +390,9 @@ class ControllerAI {
 			return 100;
 		if (dif < -30 && this.player.opponent().hand.cards.length - this.player.hand.cards.length > 2)
 			return 100;
+		// FIX: passing while slightly behind simply gave the round away
+		if (dif > 0)
+			return 0;
 		return Math.floor(Math.abs(dif));
 	}
 	
@@ -766,7 +878,8 @@ class CardContainer {
 	
 	// Removes the HTML elemenet associated with the card from this CardContainer
 	removeCardElement(card, index){
-		if (this.elem)
+		// FIX: never throw if the element was already moved elsewhere (e.g. a summoned Avenger unit)
+		if (this.elem && card.elem.parentNode === this.elem)
 			this.elem.removeChild(card.elem);
 	}
 	
@@ -1469,6 +1582,8 @@ class Game {
 	}
 	
 	reset() {
+		// incremented for every new game: delayed effects of a previous game must not run in the next one
+		this.generation = (this.generation || 0) + 1;
 		this.firstPlayer = null;
 		this.currPlayer = null;
 		
@@ -1710,10 +1825,11 @@ class Game {
 
 	exitGame()
 	{
+		const wasEnabled = !document.getElementsByTagName("main")[0].classList.contains("noclick");
 		AudioManager.playSFX('warning');
 		ui.popup(
 			// FIX: "Resume" must give control back (the board stayed unclickable)
-			t("exit.resume"), ()=>ui.enablePlayer(true),
+			t("exit.resume"), ()=>ui.enablePlayer(wasEnabled),
 			t("exit.exit"), ()=>this.returnToCustomization(),
 			t("exit.title") , t("exit.text")
 		);
@@ -3572,6 +3688,7 @@ function setLargeCardImage(elem, card) {
 	elem.gcCard = card instanceof Card ? card : null;
 	elem.gcCardData = card instanceof Card ? null : (card.name ? card : null);
 	elem.setAttribute("data-lg-name", card.name && deck !== "faction" ? cardName(card) : "");
+	elem.toggleAttribute("data-ribbon", typeof CARD_RIBBONS !== "undefined" && CARD_RIBBONS.has(deck + "_" + card.filename));
 }
 
 //      Get Image paths   

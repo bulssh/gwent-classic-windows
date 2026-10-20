@@ -488,7 +488,7 @@ const FACTIONS_FR = {
 	nilfgaard: ["Empire de Nilfgaard", "Remporte toute manche qui se termine par une égalité."],
 	monsters: ["Monstres", "Une carte d'unité choisie au hasard reste sur le champ de bataille après chaque manche."],
 	scoiatael: ["Scoia'tael", "Décidez qui joue en premier."],
-	skellige: ["Skellige", "Au début de la troisième manche, 2 cartes choisies au hasard dans la pile de défausse sont posées sur le champ de bataille."],
+	skellige: ["Skellige", "Au début de la 3ᵉ manche, 2 cartes de la défausse choisies au hasard reviennent sur le champ de bataille."],
 };
 
 function factionName(f) {

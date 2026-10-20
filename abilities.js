@@ -130,8 +130,8 @@ var ability_dict = {
 				cardName = card['muster'];
 			}
 			let pred = c => c.name.startsWith(cardName);
-			let units = card.holder.hand.getCards(pred).map(x => [card.holder.hand, x])
-			.concat(card.holder.deck.getCards(pred).map( x => [card.holder.deck, x] ) );
+			// TW3 rule: Muster only pulls the cards from the deck (copies in hand stay in hand)
+			let units = card.holder.deck.getCards(pred).map( x => [card.holder.deck, x] );
 			if (units.length === 0)
 				return;
 			await card.animate("muster");
@@ -244,9 +244,10 @@ var ability_dict = {
 		description: "When this card is removed from the battlefield, it summons a powerful new Unit Card to take its place. ",
 		removed: async (card) => {
 			let bdf = new Card(card_dict[21], card.holder);
+			const gen = game.generation;
 			bdf.removed.push( () => setTimeout( () => {
 				// FIX: game.isPlaying() was wrong (token stayed in the grave) and the token may be in the hand (Decoy)
-				if (game.isPlaying() && bdf.holder.grave.cards.includes(bdf))
+				if (game.isPlaying() && game.generation === gen && bdf.holder.grave.cards.includes(bdf))
 					bdf.holder.grave.removeCard(bdf);
 			}, 1001) );
 			await board.addCardToRow(bdf, "close", card.holder);
@@ -258,9 +259,10 @@ var ability_dict = {
 		description: "When this card is removed from the battlefield, it summons a powerful new Unit Card to take its place. ",
 		removed: async card => {
 			let bdf = new Card(card_dict[196], card.holder);
+			const gen = game.generation;
 			bdf.removed.push( () => setTimeout( () => {
 				// FIX: same as Avenger above
-				if (game.isPlaying() && bdf.holder.grave.cards.includes(bdf))
+				if (game.isPlaying() && game.generation === gen && bdf.holder.grave.cards.includes(bdf))
 					bdf.holder.grave.removeCard(bdf);
 			}, 1001) );
 			await board.addCardToRow(bdf, "close", card.holder);

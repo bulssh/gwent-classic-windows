@@ -224,7 +224,7 @@ const Input = (() => {
 			e.preventDefault();
 			if (ui.previewCard && !document.getElementById("click-background").classList.contains("noclick"))
 				ui.cancel();
-			else if (inGame())
+			else if (inGame() && game.currPlayer === player_me && !document.querySelector("main").classList.contains("noclick"))
 				game.exitGame();
 		}
 	});
