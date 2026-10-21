@@ -688,6 +688,7 @@ class Player {
 	async playCardAction(card, action){
 		ui.showPreviewVisuals(card);
 		await sleep(1000);
+		FX.launchFromPreview(card);
 		ui.hidePreview(card);
 		await action();
 		this.endTurn();
@@ -710,7 +711,7 @@ class Player {
 		if (!win) {
 			if (this.health < 1)
 				return;
-			document.getElementById("gem" + this.health + "-" +this.tag).classList.remove("gem-on");
+			FX.shatterGem(document.getElementById("gem" + this.health + "-" +this.tag));
 			this.health--;
 		}
 		this.setPassed(false);
@@ -884,6 +885,10 @@ class CardContainer {
 	
 	// Adds the HTML elemenet associated with the card to this CardContainer
 	addCardElement(card, index){
+		if (card.gcFlying && !(this instanceof Row) && !(this instanceof Weather)) {
+			delete card.gcFlying;
+			card.elem.style.visibility = "";
+		}
 		if (this.elem){
 			if (index === this.cards.length)
 				this.elem.appendChild(card.elem);
@@ -1164,10 +1169,12 @@ class Row extends CardContainer {
 		if (card.isSpecial()) {
 			this.special = card;
 			this.elem_special.appendChild(card.elem);
+			FX.arrived(card, this);
 		} else {
 			let index = this.addCardSorted(card);
 			this.addCardElement(card, index);
 			this.resize();
+			FX.arrived(card, this);
 			await this.playPlacementAudio(card);
 		}
 		this.updateState(card, true);
@@ -1245,6 +1252,11 @@ class Row extends CardContainer {
 	
 	// Updates a card's effect on the row
 	updateState(card, activate){
+		this.updateStateEffects(card, activate);
+		this.elem_parent?.classList.toggle("row-horn", this.effects.horn > 0);
+	}
+
+	updateStateEffects(card, activate){
 		for (let x of card.abilities){
 			switch (x) {
 				case "morale":
@@ -1403,6 +1415,7 @@ class Weather extends CardContainer {
 	async addCard(card) {
 		const isDuplicate = !!this.cards.find(c => c.name === card.name);
 		super.addCard(card);
+		FX.arrived(card, this);
 		AudioManager.playSFX(card.audio);
 		card.elem.classList.add("noclick");
 		if (card.name === "Clear Weather"){
@@ -2211,6 +2224,7 @@ class UI {
 			this.setSelectable(null, false);
 			this.showPreview(card);
 		} else if (pCard.name === "Decoy") {
+			FX.launchFromPreview(pCard);
 			this.hidePreview(card);
 			this.enablePlayer(false);
 			board.toHand(card, row);
@@ -2235,6 +2249,8 @@ class UI {
 			return;
 		let card = this.previewCard;
 		let holder = card.holder;
+		if (card.name !== "Scorch")
+			FX.launchFromPreview(card);
 		this.hidePreview();
 		this.enablePlayer(false);
 		if (card.name === "Scorch"){
@@ -2569,9 +2585,49 @@ class Carousel {
 	// Called by the client to cycle cards displayed by n
 	shift(event, n){
 		(event || window.event)?.stopPropagation();
+		const old = this.index;
 		this.index = Math.max(0, Math.min(this.indices.length-1, this.index+n));
 		AudioManager.playSFX('ui_card');
+		const moved = this.index - old;
+		const before = moved ? [...this.previews].map(e => e.classList.contains("hide") ? null : e.getBoundingClientRect()) : null;
 		this.update();
+		if (moved)
+			this.slide(moved, before);
+	}
+
+	// Slides the cards to their new places (each slot shows the card of its neighbour after a shift)
+	slide(moved, before) {
+		const slots = [...this.previews];
+		const after = slots.map(e => e.classList.contains("hide") ? null : e.getBoundingClientRect());
+		// distance between two neighbouring slots
+		let step = 0;
+		for (let j = 0; j + 1 < after.length && !step; j++)
+			if (after[j] && after[j + 1])
+				step = (after[j + 1].left + after[j + 1].width / 2) - (after[j].left + after[j].width / 2);
+		if (!step)
+			step = (after.find(Boolean)?.width || 0) * 1.1;
+		slots.forEach((e, j) => {
+			e.getAnimations().filter(a => !(window.CSSTransition && a instanceof CSSTransition)).forEach(a => a.cancel());
+			const to = after[j];
+			if (!to)
+				return;
+			const k = j + moved;
+			let from = k >= 0 && k < slots.length ? before[k] : null;
+			let fadeIn = false;
+			if (!from) {
+				// a card coming from outside: start one step further, invisible
+				fadeIn = true;
+				from = {left: to.left + Math.sign(moved) * step, top: to.top, width: to.width, height: to.height};
+			}
+			const dx = (from.left + from.width / 2) - (to.left + to.width / 2);
+			const dy = (from.top + from.height / 2) - (to.top + to.height / 2);
+			const sc = from.width / to.width;
+			e.animate([
+				{transform: `translate(${dx}px, ${dy}px) scale(${sc})`, opacity: fadeIn ? 0 : 1},
+				{transform: "none", opacity: 1}
+			], {duration: 260, easing: "cubic-bezier(0.22, 0.61, 0.36, 1)"});
+		});
+		this.desc.animate([{opacity: 0.2}, {opacity: 1}], {duration: 220, easing: "ease-out"});
 	}
 
 	// called when mousing over/out of one of the carousel cards
@@ -3565,6 +3621,8 @@ async function translateTo(card, container_source, container_dest){
 	if (!container_dest || !container_source)
 		return;
 	if (container_dest === player_op.hand && container_source === player_op.deck)
+		return;
+	if (await FX.playedCard(card, container_source, container_dest))
 		return;
 	
 	let elem = card.elem;
