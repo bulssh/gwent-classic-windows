@@ -283,17 +283,16 @@ function cardLargeTitle(card) {
 		return "";
 	if (LANG === "fr")
 		return CARD_TITLES_FR[name] || cardName(card);
-	return name.trim();
+	return CARD_TITLES_EN[name] || name.trim();
 }
 
-// Quote printed on a large card (French only: the English one is part of the picture)
+// Quote printed on a large card (the pictures carry no text)
 function cardQuote(card) {
-	if (LANG !== "fr" || !card || !card.name)
+	if (!card || !card.name)
 		return "";
-	return CARD_QUOTES_FR[card.name] || "";
+	return (LANG === "fr" ? CARD_QUOTES_FR : CARD_QUOTES_EN)[card.name] || "";
 }
 
-// ---------- abilities ----------
 // English texts not present in ability_dict
 const ABILITIES_EN = {
 	cerys: ["Summon Shield Maidens", "Summons all Shield Maidens from deck and hand. "],

@@ -2944,7 +2944,7 @@ class DeckMaker {
 		let card_data = card_dict[index];
 		
 		let elem = document.createElement("div");
-		setLargeCardImage(elem, card_data);
+		setLargeCardImage(elem, card_data, this.faction);
 		elem.classList.add("card-lg");
 		let count = document.createElement("div");
 		elem.appendChild(count);
@@ -3760,29 +3760,41 @@ function fade(fadeIn, elem, dur){
 
 // Sets a large card picture on an element (localized picture without English text in French)
 // and remembers which card it shows (used by the zoom on right click)
-function setLargeCardImage(elem, card) {
+function setLargeCardImage(elem, card, faction) {
 	if (!elem)
 		return;
 	const deck = card.faction || card.deck;
-	elem.style.backgroundImage = largeURL(deck + "_" + card.filename);
+	const key = deck + "_" + card.filename;
+	// neutral, special and weather cards wear the ribbon of the deck they are in (like in TW3)
+	if (faction === undefined)
+		faction = card.holder?.deck?.faction;
+	const neutral = (deck === "neutral" || deck === "special" || deck === "weather") && card.row !== "leader";
+	const factionRibbon = neutral && ["realms", "nilfgaard", "monsters", "scoiatael", "skellige"].includes(faction);
+	elem.style.backgroundImage = factionRibbon
+		? [imgURL("ribbon/icons_" + key, "png"), imgURL("ribbon/ribbon_" + faction, "png"), largeURL(key)].join(", ")
+		: largeURL(key);
 	elem.gcCard = card instanceof Card ? card : null;
 	elem.gcCardData = card instanceof Card ? null : (card.name ? card : null);
+	elem.gcFaction = faction;
 	const printed = !!card.name && deck !== "faction";
-	const ribbon = typeof CARD_RIBBONS !== "undefined" && CARD_RIBBONS.has(deck + "_" + card.filename);
+	const ribbon = factionRibbon || (typeof CARD_RIBBONS !== "undefined" && CARD_RIBBONS.has(key));
 	const title = printed ? cardLargeTitle(card) : "";
 	const quote = printed ? cardQuote(card) : "";
 	elem.setAttribute("data-lg-name", title);
 	elem.setAttribute("data-lg-quote", quote);
 	elem.toggleAttribute("data-lg-quote-italic", !!quote && !/^["“«]/.test(quote));
 	elem.toggleAttribute("data-ribbon", ribbon);
-	// font sizes (in % of the card width) so that long French names and quotes fit the parchment
-	if (title)
+	// font sizes (in % of the card width) so that long names and quotes fit the parchment
+	if (title) {
 		elem.style.setProperty("--lg-name-size", fitFontSize(title, "700", "normal", ribbon ? 69 : 85, 17.4, 1.12, 7.4, 4.4, 2).toFixed(2));
+		// deck lists show the name alone, bigger (like the deck builder of TW3)
+		elem.style.setProperty("--lg-list-size", fitFontSize(title, "700", "normal", ribbon ? 69 : 85, 24, 1.1, 9.2, 5.5, 2).toFixed(2));
+	}
 	if (quote)
 		elem.style.setProperty("--lg-quote-size", fitFontSize(quote, "500", elem.hasAttribute("data-lg-quote-italic") ? "italic" : "normal",
 			87, ribbon ? 17.6 : 19.4, 1.15, 6.4, 4.2, 3).toFixed(2));
 	if (printed && !document.fonts.check('700 10px "GC Sans"'))
-		document.fonts.ready.then(() => { if (elem.getAttribute("data-lg-name") === title) setLargeCardImage(elem, card); });
+		document.fonts.ready.then(() => { if (elem.getAttribute("data-lg-name") === title) setLargeCardImage(elem, card, faction); });
 }
 
 // Largest font size (in % of the card width) at which the text fits a box of width x height (same unit)
@@ -3824,7 +3836,7 @@ function iconURL(name, ext = "png"){
 	return imgURL("icons/" + name, ext);
 }
 function largeURL(name, ext="jpg"){
-	return imgURL((LANG === "fr" ? "lg_fr/" : "lg/") + name, ext)
+	return imgURL("lg/" + name, ext) // pictures without text: names and quotes are drawn by CSS
 }
 function smallURL(name, ext="jpg"){
 	return imgURL("sm/" + name, ext);

@@ -68,14 +68,16 @@ const Input = (() => {
 				continue;
 			best = e; // document order ~ painting order: keep the last (topmost) one
 		}
+		lastFaction = best ? best.gcFaction : undefined;
 		return best ? cardOf(best) : null;
 	}
+	let lastFaction;
 
-	function openZoom(card) {
+	function openZoom(card, faction = lastFaction) {
 		if (!card)
 			return false;
 		const data = card instanceof Card ? card : new Card(card, null);
-		setLargeCardImage(zoomCard, data);
+		setLargeCardImage(zoomCard, data, card instanceof Card && card.holder ? undefined : faction);
 		ui.setDescription(data, zoomDesc);
 		zoomHint.textContent = t("zoom.hint");
 		zoom.classList.remove("hide");

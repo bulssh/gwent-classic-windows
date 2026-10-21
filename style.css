@@ -1508,9 +1508,9 @@ body::before {
 
 /* large cards: French name printed on the parchment (pictures without English text) */
 .card-lg { position: relative; }
-.lang-fr .card-lg[data-lg-name], .lang-fr #card-leader > div[data-lg-name] { container-type: size; }
-.lang-fr .card-lg[data-lg-name]:not([data-lg-name=""])::after,
-.lang-fr #card-leader > div[data-lg-name]:not([data-lg-name=""])::after {
+.card-lg[data-lg-name], #card-leader > div[data-lg-name] { container-type: size; }
+.card-lg[data-lg-name]:not([data-lg-name=""])::after,
+#card-leader > div[data-lg-name]:not([data-lg-name=""])::after {
 	content: attr(data-lg-name);
 	position: absolute;
 	left: 7%;
@@ -1533,8 +1533,8 @@ body::before {
 	overflow-wrap: break-word;
 }
 /* quote printed under the name, like on the cards of The Witcher 3 */
-.lang-fr .card-lg[data-lg-quote]:not([data-lg-quote=""])::before,
-.lang-fr #card-leader > div[data-lg-quote]:not([data-lg-quote=""])::before {
+.card-lg[data-lg-quote]:not([data-lg-quote=""])::before,
+#card-leader > div[data-lg-quote]:not([data-lg-quote=""])::before {
 	content: attr(data-lg-quote);
 	position: absolute;
 	left: 6%;
@@ -1556,9 +1556,9 @@ body::before {
 	white-space: pre-line;
 	overflow: hidden;
 }
-.lang-fr .card-lg[data-lg-quote-italic]::before, .lang-fr #card-leader > div[data-lg-quote-italic]::before { font-style: italic; }
+.card-lg[data-lg-quote-italic]::before, #card-leader > div[data-lg-quote-italic]::before { font-style: italic; }
 /* below the faction ribbon */
-.lang-fr .card-lg[data-ribbon][data-lg-quote]::before, .lang-fr #card-leader > div[data-ribbon][data-lg-quote]::before { top: 88.6%; bottom: 1.8%; }
+.card-lg[data-ribbon][data-lg-quote]::before, #card-leader > div[data-ribbon][data-lg-quote]::before { top: 88.6%; bottom: 1.8%; }
 
 /* card zoom (right click, two-finger tap, long press) */
 #zoom {
@@ -1669,8 +1669,8 @@ body::before {
 .card-contianer-title { white-space: nowrap; width: auto; }
 
 /* name next to the faction ribbon */
-.lang-fr .card-lg[data-ribbon][data-lg-name]:not([data-lg-name=""])::after,
-.lang-fr #card-leader > div[data-ribbon][data-lg-name]:not([data-lg-name=""])::after { left: 25%; right: 5%; }
+.card-lg[data-ribbon][data-lg-name]:not([data-lg-name=""])::after,
+#card-leader > div[data-ribbon][data-lg-name]:not([data-lg-name=""])::after { left: 25%; right: 5%; }
 /* French: no English-style Capitalized Words */
 .lang-fr .deck-name, .lang-fr .name, .lang-fr #end-screen th, .lang-fr .card-description > h1 { text-transform: none; }
 .lang-fr #pass-button { font-size: calc(1.55 * var(--vw)); }
