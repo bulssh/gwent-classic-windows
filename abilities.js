@@ -131,8 +131,11 @@ var ability_dict = {
 			}
 			// cards being drawn right now are not in the deck any more
 			let pred = c => c.name.startsWith(cardName) && !c.gcDrawing;
-			// TW3 rule: Muster only pulls the cards from the deck (copies in hand stay in hand)
+			// TW3 rule: Muster only pulls the cards from the deck (copies in hand stay in hand),
+			// except Cerys ("Summon Shield Maidens: summons all Shield Maidens from deck and hand")
 			let units = card.holder.deck.getCards(pred).map( x => [card.holder.deck, x] );
+			if (card.name === "Cerys")
+				units = units.concat(card.holder.hand.getCards(pred).map( x => [card.holder.hand, x] ));
 			if (units.length === 0)
 				return;
 			await card.animate("muster");
@@ -316,7 +319,7 @@ var ability_dict = {
 			let container = new CardContainer();
 			container.cards = card.holder.opponent().hand.findCardsRandom(() => true, 3);
 			Carousel.curr.cancel();
-			await ui.viewCardsInContainer(container);
+			await ui.viewCardsInContainer(container, undefined, t("carousel.opponentHand"));
 		},
 		weight: card => {
 			let count = card.holder.opponent().hand.cards.length;
@@ -384,8 +387,8 @@ var ability_dict = {
 				return;
 			} else
 				Carousel.curr.exit();
-			await ui.queueCarousel(hand, 2, (c,i) => board.toGrave(c.cards[i], c), () => true);
-			await ui.queueCarousel(deck, 1, (c,i) => board.toHand(c.cards[i], deck), () => true, true);
+			await ui.queueCarousel(hand, 2, (c,i) => board.toGrave(c.cards[i], c), () => true, false, false, t("carousel.discard"));
+			await ui.queueCarousel(deck, 1, (c,i) => board.toHand(c.cards[i], deck), () => true, true, false, t("carousel.draw"));
 		},
 		weight: (card, ai) => {
 			let cards = ai.discardOrder(card).splice(0,2).filter(c => c.basePower < 7);

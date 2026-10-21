@@ -1,7 +1,7 @@
 "use strict"
 
-// Localisation (fr / en). Card and ability names in French follow the official French version
-// of The Witcher 3 (Gwynt) and the official French Gwynt manual published by CD PROJEKT RED.
+// Localisation (fr / en). The French card names, quotes, abilities and game messages come from the
+// official French version of The Witcher 3 (Gwynt), see i18n_fr_data.js.
 // Internal card names stay in English: they drive game rules (Muster groups, etc.).
 
 const LANG = (() => {
@@ -205,6 +205,9 @@ en: {
 }
 };
 
+// official TW3 wording wins over the hand-written strings above
+Object.assign(I18N.fr, I18N_FR_OFFICIAL);
+
 function t(key, ...args) {
 	let s = I18N[LANG][key];
 	if (s === undefined)
@@ -213,202 +216,6 @@ function t(key, ...args) {
 		return key;
 	return s.replace(/\{(\d+)\}/g, (m, i) => args[Number(i)] !== undefined ? args[Number(i)] : m);
 }
-
-// ---------- official French card names (key: internal English name) ----------
-const CARD_NAMES_FR = {
-	// neutral
-	"Mysterious Elf": "Avallac'h",
-	"Cirilla Fiona Elen Riannon": "Cirilla Fiona Elen Riannon",
-	"Dandelion": "Jaskier",
-	"Emiel Regis Rohellec Terzieff": "Emiel Régis Rohellec Terzieff-Godefroy",
-	"Geralt of Rivia": "Geralt de Riv",
-	"Triss Merigold": "Triss Merigold",
-	"Vesemir": "Vesemir",
-	"Villentretenmerth": "Villentretenmerth",
-	"Yennefer of Vengerberg": "Yennefer de Vengerberg",
-	"Zoltan Chivay": "Zoltan Chivay",
-	"Olgierd von Everec": "Olgierd von Everec",
-	"Gaunter O'Dimm": "Gaunter O'Dimm",
-	"Gaunter O'Dimm - Darkness": "Gaunter O'Dimm : Ténèbres",
-	"Cow": "Vache",
-	"Bovine Defense Force": "Force de défense bovine",
-	"Roach": "Ablette",
-	// special & weather
-	"Decoy": "Leurre",
-	"Commander's Horn": "Sonnerie de la charge",
-	"Scorch": "Incinération",
-	"Mardroeme": "Mardrome",
-	"Biting Frost": "Froid mordant",
-	"Clear Weather": "Temps dégagé",
-	"Impenetrable Fog": "Brouillard impénétrable",
-	"Torrential Rain": "Pluie torrentielle",
-	"Skellige Storm": "Tempête de Skellige",
-	// Northern Realms
-	"Foltest - King of Temeria": "Foltest : Roi de Temeria",
-	"Foltest - Lord Commander of the North": "Foltest : Protecteur du Nord",
-	"Foltest - The Siegemaster": "Foltest : Maître du siège",
-	"Foltest - The Steel-Forged": "Foltest : Le Brave",
-	"Foltest - Son of Medell": "Foltest : Fils de Medell",
-	"Ballista": "Baliste",
-	"Blue Stripes Commando": "Commando des Stries Bleues",
-	"Catapult": "Catapulte",
-	"Crinfrid Reavers Dragon Hunter": "Chasseur de dragons de Crinfrid",
-	"Dethmold": "Detmold",
-	"Dun Banner Medic": "Chirurgienne de la Bannière Brune",
-	"Esterad Thyssen": "Esterad Thyssen",
-	"John Natalis": "Jan Natalis",
-	"Kaedweni Siege Expert": "Expert en siège de Kaedwen",
-	"Keira Metz": "Keira Metz",
-	"Philippa Eilhart": "Philippa Eilhart",
-	"Poor Fucking Infantry": "Misérable Fantassin de Mes Deux",
-	"Prince Stennis": "Prince Stennis",
-	"Redanian Foot Soldier": "Fantassin redanien",
-	"Sheldon Skaggs": "Sheldon Skaggs",
-	"Siege Tower": "Tour de siège",
-	"Siegfried of Denesle": "Siegfried de Denesle",
-	"Sigismund Dijkstra": "Sigismund Dijkstra",
-	"Síle de Tansarville": "Sheala de Tancarville",
-	"Thaler": "Talar",
-	"Sabrina Glevissig": "Sabrina Glevissig",
-	"Vernon Roche": "Vernon Roche",
-	"Ves": "Ves",
-	"Yarpen Zigrin": "Yarpen Zigrin",
-	"Trebuchet": "Trébuchet",
-	// Nilfgaard
-	"Emhyr var Emreis - His Imperial Majesty": "Emhyr var Emreis : Sa Majesté impériale",
-	"Emhyr var Emreis - Emperor of Nilfgaard": "Emhyr var Emreis : Empereur du Nilfgaard",
-	"Emhyr var Emreis - the White Flame": "Emhyr var Emreis : La Flamme Blanche",
-	"Emhyr var Emreis - The Relentless": "Emhyr var Emreis : L'Implacable",
-	"Emhyr var Emreis - Invader of the North": "Emhyr var Emreis : Envahisseur du Nord",
-	"Albrich": "Albrich",
-	"Assire var Anahid": "Assire var Anahid",
-	"Black Infantry Archer": "Archer des Escadrons noirs",
-	"Cahir Mawr Dyffryn aep Ceallach": "Cahir Mawr Dyffryn aep Ceallach",
-	"Cynthia": "Cynthia",
-	"Etolian Auxiliary Archers": "Archer auxiliaire étolien",
-	"Fringilla Vigo": "Fringilla Vigo",
-	"Heavy Zerrikanian Fire Scorpion": "Scorpion incendiaire lourd zerrikanien",
-	"Impera Brigade Guard": "Garde de la brigade Impera",
-	"Letho of Gulet": "Letho de Guletta",
-	"Menno Coehoorn": "Menno Coehoorn",
-	"Morteisen": "Morteisen",
-	"Morvran Voorhis": "Morvran Voorhis",
-	"Nausicaa Cavalry Rider": "Cavalier de la brigade Nausicaa",
-	"Puttkammer": "Puttkammer",
-	"Rainfarn": "Rainfarn",
-	"Renuald aep Matsen": "Renuald aep Matsen",
-	"Rotten Mangonel": "Mangonneau vermoulu",
-	"Shilard Fitz-Oesterlen": "Shilard Fitz-Oesterlen",
-	"Siege Engineer": "Ingénieur de siège",
-	"Siege Technician": "Sapeur",
-	"Stefan Skellen": "Stefan Skellen",
-	"Sweers": "Sweers",
-	"Tibor Eggebracht": "Tibor Eggebracht",
-	"Vanhemar": "Vanhemar",
-	"Vattier de Rideaux": "Vattier de Rideaux",
-	"Vreemde": "Vreemde",
-	"Young Emissary": "Jeune émissaire",
-	"Zerrikanian Fire Scorpion": "Scorpion incendiaire zerrikanien",
-	// Monsters
-	"Eredin - Commander of the Red Riders": "Eredin : Commandant des Cavaliers pourpres",
-	"Eredin - Bringer of Death": "Eredin : Le Mortifère",
-	"Eredin - Destroyer of Worlds": "Eredin : Destructeur de mondes",
-	"Eredin - King of the Wild Hunt": "Eredin : Roi de la Chasse sauvage",
-	"Eredin Bréacc Glas - The Treacherous": "Eredin Bréacc Glas : Le Fourbe",
-	"Arachas ": "Arachas",
-	"Arachas- Behemoth": "Arachas mastodonte",
-	"Botchling": "Couvin",
-	"Celaeno Harpy": "Célénos",
-	"Cockatrice": "Cocatrix",
-	"Crone - Brewess": "Moire : Ambroisie",
-	"Crone - Weavess": "Moire : Fuselle",
-	"Crone - Whispess": "Moire : Soupir",
-	"Draug": "Draugr",
-	"Earth Elemental": "Élémentaire de terre",
-	"Endrega": "Endriague",
-	"Fiend": "Fiellon",
-	"Fire Elemental": "Élémentaire de feu",
-	"Foglet": "Brumelin",
-	"Forktail": "Foënard",
-	"Frightener": "Épouvanteur",
-	"Gargoyle": "Gargouille",
-	"Ghoul": "Goule",
-	"Grave Hag": "Guenaude sépulcrale",
-	"Griffin": "Griffon",
-	"Harpy": "Harpie",
-	"Ice Giant": "Géant de glace",
-	"Imlerith": "Imlerith",
-	"Kayran": "Kayran",
-	"Leshen": "Leshen",
-	"Nekker": "Nekker",
-	"Plague Maiden": "Vierge de la peste",
-	"Vampire - Bruxa": "Vampire : Brouxe",
-	"Vampire - Ekimmara": "Vampire : Ekimme",
-	"Vampire - Fleder": "Vampire : Noctule",
-	"Vampire - Garkain": "Vampire : Garkain",
-	"Vampire - Katakan": "Vampire : Katakan",
-	"Werewolf": "Loup-garou",
-	"Wyvern": "Wyvern",
-	"Toad": "Crapaud",
-	// Scoia'tael
-	"Francesca Findabair - Queen of Dol Blathanna": "Francesca Findabair : Reine de Dol Blathanna",
-	"Francesca Findabair - the Beautiful": "Francesca Findabair : La Belle",
-	"Francesca Findabair - Daisy of the Valley": "Francesca Findabair : La Pâquerette des vallées",
-	"Francesca Findabair - Pureblood Elf": "Francesca Findabair : Elfe de sang pur",
-	"Francesca Findabair - Hope of the Aen Seidhe": "Francesca Findabair : L'Espoir des Aen Seidhe",
-	"Ciaran aep Easnillien": "Ciaran aep Easnillien",
-	"Barclay Els": "Barclay Els",
-	"Dennis Cranmer": "Dennis Cranmer",
-	"Dol Blathanna Archer": "Archer de Dol Blathanna",
-	"Dol Blathanna Scout": "Éclaireur de Dol Blathanna",
-	"Dwarven Skirmisher": "Escarmoucheur nain",
-	"Eithné": "Eithné",
-	"Elven Skirmisher": "Escarmoucheur elfe",
-	"Filavandrel aen Fidhail": "Filavandrel aen Fidhail",
-	"Havekar Healer": "Guérisseuse havekar",
-	"Havekar Smuggler": "Contrebandier havekar",
-	"Ida Emean aep Sivney": "Ida Emean aep Sivney",
-	"Iorveth": "Iorveth",
-	"Isengrim Faoiltiarna": "Isengrim Faoiltiarna",
-	"Mahakaman Defender": "Défenseur de Mahakam",
-	"Milva": "Milva",
-	"Riordain": "Riordain",
-	"Saesenthessis": "Saesenthessis",
-	"Toruviel": "Toruviel",
-	"Vrihedd Brigade Recruit": "Recrue de la brigade Vrihedd",
-	"Vrihedd Brigade Veteran": "Vétéran de la brigade Vrihedd",
-	"Yaevinn": "Yaevinn",
-	"Schirru": "Schirru",
-	// Skellige
-	"Crach an Craite": "Crach an Craite",
-	"King Bran": "Roi Bran",
-	"Berserker": "Berserker",
-	"Birna Bran": "Birna Bran",
-	"Blueboy Lugos": "Lugos la Beigne",
-	"Cerys": "Cerys",
-	"Clan Brokva Archer": "Archer du clan Brokvar",
-	"Clan Dimun Pirate": "Pirate du clan Dimun",
-	"Cerys - Clan Drummond Shield Maiden": "Vierge au bouclier du clan Drummond",
-	"Clan Heymaey Skald": "Skalde du clan Heymaey",
-	"Clan Tordarroch Armorsmith": "Armurier du clan Tordarroch",
-	"Clan an Craite Warrior": "Guerrier du clan an Craite",
-	"Donar an Hindar": "Donar an Hindar",
-	"Draig Bon-Dhu": "Draig Bon-Dhu",
-	"Ermion": "Sac-à-souris",
-	"Hemdall": "Hemdall",
-	"Hjalmar": "Hjalmar",
-	"Holger Blackhand": "Holger Main-noire",
-	"Kambi": "Kambi",
-	"Light Longship": "Drakkar léger",
-	"Madman Lugos": "Lugos le Dingue",
-	"Olaf": "Olaf",
-	"Svanrige": "Svanrige",
-	"Transformed Vildkaarl": "Vildkaarl transformé",
-	"Transformed Young Vildkaarl": "Jeune vildkaarl transformé",
-	"Udalryk": "Udalryk",
-	"War Longship": "Drakkar de guerre",
-	"Young Berserker": "Jeune berserker",
-};
 
 // Display name of a card (Card instance or card_dict data)
 function cardName(card) {
@@ -420,77 +227,46 @@ function cardName(card) {
 	return name.trim();
 }
 
+// Title printed on a large card (leaders: name and epithet on two lines, like in The Witcher 3)
+function cardLargeTitle(card) {
+	const name = card && card.name;
+	if (!name)
+		return "";
+	if (LANG === "fr")
+		return CARD_TITLES_FR[name] || cardName(card);
+	return name.trim();
+}
+
+// Quote printed on a large card (French only: the English one is part of the picture)
+function cardQuote(card) {
+	if (LANG !== "fr" || !card || !card.name)
+		return "";
+	return CARD_QUOTES_FR[card.name] || "";
+}
+
 // ---------- abilities ----------
-const ABILITIES_FR = {
-	clear: ["Temps dégagé", "Supprime tous les effets des cartes météo (Froid mordant, Brouillard impénétrable et Pluie torrentielle)."],
-	frost: ["Froid mordant", "Réduit à 1 la force de toutes les cartes de combat rapproché des deux joueurs."],
-	fog: ["Brouillard impénétrable", "Réduit à 1 la force de toutes les cartes de combat à distance des deux joueurs."],
-	rain: ["Pluie torrentielle", "Réduit à 1 la force de toutes les cartes de combat de siège des deux joueurs."],
-	storm: ["Tempête de Skellige", "Réduit à 1 la force de toutes les unités de combat à distance et de siège."],
-	hero: ["Héros", "Insensible aux cartes spéciales et aux capacités."],
-	decoy: ["Leurre", "Échangez-le contre une unité de votre champ de bataille pour la reprendre en main."],
-	horn: ["Sonnerie de la charge", "Double la force de toutes les cartes d'unité de la ligne. Limitée à une par ligne."],
-	scorch_unit: ["Incinération", "Détruit la ou les cartes les plus fortes du champ de bataille."],
-	mardroeme: ["Mardrome", "Déclenche la transformation de toutes les cartes Berserker de la même ligne."],
-	berserker: ["Berserker", "Se transforme en ours lorsqu'une carte Mardrome est posée sur sa ligne."],
-	vildkarrl: ["", ""],
-	scorch: ["Incinération", "Défaussée après utilisation. Détruit la ou les cartes les plus fortes du champ de bataille."],
-	scorch_c: ["Incinération – Combat rapproché", "Détruit la ou les unités de combat rapproché les plus fortes de l'adversaire si la force totale de ses unités de combat rapproché est d'au moins 10."],
-	scorch_r: ["Incinération – Combat à distance", "Détruit la ou les unités de combat à distance les plus fortes de l'adversaire si la force totale de ses unités de combat à distance est d'au moins 10."],
-	scorch_s: ["Incinération – Combat de siège", "Détruit la ou les unités de siège les plus fortes de l'adversaire si la force totale de ses unités de siège est d'au moins 10."],
-	agile: ["Agile", "Peut être placée sur la ligne de combat rapproché ou de combat à distance. Ne peut plus être déplacée une fois posée."],
-	muster: ["Rassemblement", "Trouvez toutes les cartes portant le même nom dans votre paquet et jouez-les immédiatement."],
-	spy: ["Espion", "Placez cette carte sur le champ de bataille de votre adversaire (elle compte dans son total) et piochez 2 cartes de votre paquet."],
-	medic: ["Médecin", "Choisissez une carte de votre pile de défausse et jouez-la immédiatement (ni héros, ni carte spéciale)."],
-	morale: ["Moral regonflé", "Ajoute +1 à toutes les unités de la ligne (sauf elle-même)."],
-	bond: ["Lien étroit", "Placez-la à côté d'une carte portant le même nom pour doubler la force des deux cartes."],
-	avenger: ["Vengeur", "Quand cette carte quitte le champ de bataille, elle invoque une puissante carte d'unité pour la remplacer."],
-	avenger_kambi: ["Vengeur", "Quand cette carte quitte le champ de bataille, elle invoque une puissante carte d'unité pour la remplacer."],
-	foltest_king: ["", "Choisissez une carte Brouillard impénétrable dans votre paquet et jouez-la immédiatement."],
-	foltest_lord: ["", "Supprime tous les effets météo en jeu (Froid mordant, Pluie torrentielle et Brouillard impénétrable)."],
-	foltest_siegemaster: ["", "Double la force de toutes vos unités de siège (sauf si une Sonnerie de la charge est déjà sur cette ligne)."],
-	foltest_steelforged: ["", "Détruit la ou les unités de siège les plus fortes de l'adversaire si la force totale de ses unités de siège est d'au moins 10."],
-	foltest_son: ["", "Détruit la ou les unités de combat à distance les plus fortes de l'adversaire si la force totale de ses unités de combat à distance est d'au moins 10."],
-	emhyr_imperial: ["", "Choisissez une carte Pluie torrentielle dans votre paquet et jouez-la immédiatement."],
-	emhyr_emperor: ["", "Regardez 3 cartes choisies au hasard dans la main de votre adversaire."],
-	emhyr_whiteflame: ["", "Annule la capacité de chef de votre adversaire."],
-	emhyr_relentless: ["", "Piochez une carte dans la pile de défausse de votre adversaire."],
-	emhyr_invader: ["", "Les capacités qui ramènent une unité sur le champ de bataille en ramènent une choisie au hasard. Affecte les deux joueurs."],
-	eredin_commander: ["", "Double la force de toutes vos unités de combat rapproché (sauf si une Sonnerie de la charge est déjà sur cette ligne)."],
-	eredin_bringer_of_death: ["", "Reprenez en main une carte de votre pile de défausse."],
-	eredin_destroyer: ["", "Défaussez 2 cartes et piochez 1 carte de votre choix dans votre paquet."],
-	eredin_king: ["", "Choisissez une carte météo dans votre paquet et jouez-la immédiatement."],
-	eredin_treacherous: ["", "Double la force de toutes les cartes Espion (affecte les deux joueurs)."],
-	francesca_queen: ["", "Détruit la ou les unités de combat rapproché les plus fortes de l'adversaire si la force totale de ses unités de combat rapproché est d'au moins 10."],
-	francesca_beautiful: ["", "Double la force de toutes vos unités de combat à distance (sauf si une Sonnerie de la charge est déjà sur cette ligne)."],
-	francesca_daisy: ["", "Piochez une carte supplémentaire au début de la bataille."],
-	francesca_pureblood: ["", "Choisissez une carte Froid mordant dans votre paquet et jouez-la immédiatement."],
-	francesca_hope: ["", "Déplace les unités agiles vers la ligne où leur force est la plus élevée (celles déjà sur la meilleure ligne ne bougent pas)."],
-	crach_an_craite: ["", "Remélange les piles de défausse des deux joueurs dans leurs paquets respectifs."],
-	king_bran: ["", "Par mauvais temps, les unités ne perdent que la moitié de leur force."],
+// English texts not present in ability_dict
+const ABILITIES_EN = {
+	cerys: ["Summon Shield Maidens", "Summons all Shield Maidens from deck and hand. "],
 };
 
 function abilityName(key) {
 	if (LANG === "fr" && ABILITIES_FR[key])
 		return ABILITIES_FR[key][0];
+	if (ABILITIES_EN[key])
+		return ABILITIES_EN[key][0];
 	return ability_dict[key] && ability_dict[key].name || "";
 }
 
 function abilityDesc(key) {
 	if (LANG === "fr" && ABILITIES_FR[key])
 		return ABILITIES_FR[key][1] + " ";
+	if (ABILITIES_EN[key])
+		return ABILITIES_EN[key][1];
 	return ability_dict[key] && ability_dict[key].description || "";
 }
 
 // ---------- factions ----------
-const FACTIONS_FR = {
-	realms: ["Royaumes du Nord", "Piochez une carte de votre paquet chaque fois que vous remportez une manche."],
-	nilfgaard: ["Empire de Nilfgaard", "Remporte toute manche qui se termine par une égalité."],
-	monsters: ["Monstres", "Une carte d'unité choisie au hasard reste sur le champ de bataille après chaque manche."],
-	scoiatael: ["Scoia'tael", "Décidez qui joue en premier."],
-	skellige: ["Skellige", "Au début de la 3ᵉ manche, 2 cartes de la défausse choisies au hasard reviennent sur le champ de bataille."],
-};
-
 function factionName(f) {
 	if (LANG === "fr" && FACTIONS_FR[f])
 		return FACTIONS_FR[f][0];

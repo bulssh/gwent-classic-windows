@@ -1,3 +1,41 @@
+/* Barlow Semi Condensed (SIL Open Font License, fonts/OFL-Barlow.txt), bundled so that the game
+   looks the same on every computer */
+@font-face {
+	font-family: "GC Sans";
+	font-style: normal;
+	font-weight: 400;
+	font-display: block;
+	src: url("fonts/barlow-semi-condensed-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+	font-family: "GC Sans";
+	font-style: normal;
+	font-weight: 500;
+	font-display: block;
+	src: url("fonts/barlow-semi-condensed-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+	font-family: "GC Sans";
+	font-style: normal;
+	font-weight: 600;
+	font-display: block;
+	src: url("fonts/barlow-semi-condensed-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+	font-family: "GC Sans";
+	font-style: normal;
+	font-weight: 700;
+	font-display: block;
+	src: url("fonts/barlow-semi-condensed-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+	font-family: "GC Sans";
+	font-style: italic;
+	font-weight: 400;
+	font-display: block;
+	src: url("fonts/barlow-semi-condensed-latin-400-italic.woff2") format("woff2");
+}
+
 * {
    box-sizing:border-box;
    cursor: url('img/icons/cursor.png'), auto;
@@ -38,7 +76,7 @@ html,body
 body {
 	font-size: 0px;
 	/*font-family: Impact;*/
-	font-family: "Arial Narrow", "Bahnschrift SemiCondensed", "Bahnschrift", sans-serif;
+	font-family: "GC Sans", "Bahnschrift SemiCondensed", "Bahnschrift", "Arial Narrow", sans-serif;
 	color: goldenrod;
 	background-color: black;
 }
@@ -245,6 +283,8 @@ main {
 #notif-north { background-image: url('img/icons/notif_north.png'); }
 
 #notif-monsters { background-image: url('img/icons/notif_monsters.png'); }
+
+#notif-nilfgaard { background-image: url('img/icons/notif_nilfgaard.png'); }
 
 #notif-scoiatael { background-image: url('img/icons/notif_scoiatael.png'); }
 
@@ -567,7 +607,7 @@ main {
     height: calc(3 * var(--vw));
     width: calc(10 * var(--vw));
     top: 87%;
-	font-family: "Arial Narrow", "Bahnschrift SemiCondensed", "Bahnschrift", sans-serif;
+	font-family: "GC Sans", "Bahnschrift SemiCondensed", "Bahnschrift", "Arial Narrow", sans-serif;
     font-size: calc(1.5 * var(--vw));
     color: goldenrod;
     background-color: #4c390a66;
@@ -880,7 +920,7 @@ main { background-image: url('img/boardtest8.png'); }
 	font-size: calc(1.1 * var(--vw));
 	font-weight: bold;
 	
-	/*font-family: "Arial Narrow", "Bahnschrift SemiCondensed", "Bahnschrift", sans-serif;*/
+	/*font-family: "GC Sans", "Bahnschrift SemiCondensed", "Bahnschrift", "Arial Narrow", sans-serif;*/
 }
 
 #name-me {
@@ -898,7 +938,7 @@ main { background-image: url('img/boardtest8.png'); }
 	
 	color: tan;
 	font-size: calc(.95 * var(--vw));
-	/*font-family: "Arial Narrow", "Bahnschrift SemiCondensed", "Bahnschrift", sans-serif;*/
+	/*font-family: "GC Sans", "Bahnschrift SemiCondensed", "Bahnschrift", "Arial Narrow", sans-serif;*/
 }
 
 #deck-name-me {
@@ -1538,7 +1578,7 @@ main { background-image: url('img/boardtest8.png'); }
 	content: attr(data-title);
 	background-color: rgba(10,10,10,.95);
 	color: goldenrod;
-	font-family: "Arial Narrow", "Bahnschrift SemiCondensed", "Bahnschrift", sans-serif;
+	font-family: "GC Sans", "Bahnschrift SemiCondensed", "Bahnschrift", "Arial Narrow", sans-serif;
 	font-size: calc(1.2 * var(--vw));
 	position: absolute;
 	padding: 1px 5px 2px 5px;
@@ -1577,7 +1617,7 @@ main { background-image: url('img/boardtest8.png'); }
 /* ======================= Gwent Classic 2.0 additions ======================= */
 
 body {
-	font-family: "Arial Narrow", "Bahnschrift SemiCondensed", "Bahnschrift", sans-serif;
+	font-family: "GC Sans", "Bahnschrift SemiCondensed", "Bahnschrift", "Arial Narrow", sans-serif;
 }
 
 /* side bars around the 16:9 stage: blurred board instead of plain black */
@@ -1606,17 +1646,44 @@ body::before {
 	align-items: flex-start;
 	justify-content: center;
 	text-align: center;
-	font-family: "Bahnschrift SemiBold SemiConden", "Bahnschrift", "Arial Narrow", sans-serif;
+	font-family: "GC Sans", "Bahnschrift SemiBold SemiConden", "Bahnschrift", sans-serif;
 	font-stretch: semi-condensed;
-	font-weight: bold;
-	font-size: 6.9cqw;
+	font-weight: 700;
+	font-size: calc(var(--lg-name-size, 6.9) * 1cqw);
 	line-height: 1.12;
-	color: #2e261c;
+	color: #2b251e;
 	text-shadow: 0 0 0.3cqw rgba(255, 250, 235, 0.6);
 	pointer-events: none;
-	white-space: normal;
+	white-space: pre-line;
 	overflow-wrap: break-word;
 }
+/* quote printed under the name, like on the cards of The Witcher 3 */
+.lang-fr .card-lg[data-lg-quote]:not([data-lg-quote=""])::before,
+.lang-fr #card-leader > div[data-lg-quote]:not([data-lg-quote=""])::before {
+	content: attr(data-lg-quote);
+	position: absolute;
+	left: 6%;
+	right: 6%;
+	top: 87%;
+	bottom: 2.4%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	font-family: "GC Sans", "Bahnschrift", sans-serif;
+	font-stretch: semi-condensed;
+	font-weight: 500;
+	font-size: calc(var(--lg-quote-size, 5.4) * 1cqw);
+	line-height: 1.15;
+	color: #241d15;
+	text-shadow: 0 0 0.3cqw rgba(255, 250, 235, 0.6);
+	pointer-events: none;
+	white-space: pre-line;
+	overflow: hidden;
+}
+.lang-fr .card-lg[data-lg-quote-italic]::before, .lang-fr #card-leader > div[data-lg-quote-italic]::before { font-style: italic; }
+/* below the faction ribbon */
+.lang-fr .card-lg[data-ribbon][data-lg-quote]::before, .lang-fr #card-leader > div[data-ribbon][data-lg-quote]::before { top: 88.6%; bottom: 1.8%; }
 
 /* card zoom (right click, two-finger tap, long press) */
 #zoom {
@@ -1673,7 +1740,7 @@ body::before {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-family: "Bahnschrift SemiBold SemiConden", "Bahnschrift", "Arial Narrow", sans-serif;
+	font-family: "GC Sans", "Bahnschrift SemiBold SemiConden", "Bahnschrift", sans-serif;
 	font-weight: bold;
 	font-size: calc(1.75 * var(--vw));
 }

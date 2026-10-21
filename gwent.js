@@ -1748,9 +1748,11 @@ class Game {
 	// Ends the round and may end the game. Determines final scores and the round winner.
 	async endRound() {
 		let dif = player_me.total - player_op.total;
+		let nilfgaardTie = false;
 		if (dif === 0) {
 			let nilf_me = player_me.deck.faction === "nilfgaard", nilf_op = player_op.deck.faction === "nilfgaard";
 			dif = nilf_me ^ nilf_op ? nilf_me ? 1 : -1 : 0;
+			nilfgaardTie = dif !== 0;
 		}
 		let winner = dif > 0 ? player_me : dif < 0 ? player_op : null;
 		let verdict = {winner: winner, score_me: player_me.total, score_op: player_op.total}
@@ -1778,6 +1780,9 @@ class Game {
 			notificationKey = "draw-round";
 		}
 
+		// TW3: "Nilfgaard faction ability triggered - Nilfgaard wins the tie."
+		if (nilfgaardTie)
+			await ui.notification("nilfgaard", 1200);
 		await Promise.all([
 			await board.clearRound(),
 			await ui.notification(notificationKey, 1200)
@@ -1919,7 +1924,8 @@ class Card {
 		}
 		
 		// texts shown in the description box (localized, see i18n.js)
-		const textKey = x => (x === "scorch" && this.isUnit()) || (x === "scorch" && this.hero) ? "scorch_unit" : x;
+		const textKey = x => (x === "scorch" && this.isUnit()) || (x === "scorch" && this.hero) ? "scorch_unit"
+			: x === "muster" && this.name === "Cerys" ? "cerys" : x;
 		if (this.row === "leader")
 			this.desc_name = t("leader.ability");
 		else if (this.abilities.length > 0)
@@ -2384,9 +2390,9 @@ class UI {
 	}
 	
 	// Displays a cancellable Carousel for all cards in a container
-	async viewCardsInContainer(container, action) {
+	async viewCardsInContainer(container, action, title) {
 		action = action ? action : function() {return this?.cancel?.();};
-		await this.queueCarousel(container, 1, action, () => true, false, true);
+		await this.queueCarousel(container, 1, action, () => true, false, true, title);
 	}
 	
 	// Displays a Carousel menu of filtered container items that match the predicate.
@@ -3692,9 +3698,57 @@ function setLargeCardImage(elem, card) {
 	elem.style.backgroundImage = largeURL(deck + "_" + card.filename);
 	elem.gcCard = card instanceof Card ? card : null;
 	elem.gcCardData = card instanceof Card ? null : (card.name ? card : null);
-	elem.setAttribute("data-lg-name", card.name && deck !== "faction" ? cardName(card) : "");
-	elem.toggleAttribute("data-ribbon", typeof CARD_RIBBONS !== "undefined" && CARD_RIBBONS.has(deck + "_" + card.filename));
+	const printed = !!card.name && deck !== "faction";
+	const ribbon = typeof CARD_RIBBONS !== "undefined" && CARD_RIBBONS.has(deck + "_" + card.filename);
+	const title = printed ? cardLargeTitle(card) : "";
+	const quote = printed ? cardQuote(card) : "";
+	elem.setAttribute("data-lg-name", title);
+	elem.setAttribute("data-lg-quote", quote);
+	elem.toggleAttribute("data-lg-quote-italic", !!quote && !/^["“«]/.test(quote));
+	elem.toggleAttribute("data-ribbon", ribbon);
+	// font sizes (in % of the card width) so that long French names and quotes fit the parchment
+	if (title)
+		elem.style.setProperty("--lg-name-size", fitFontSize(title, "700", "normal", ribbon ? 69 : 85, 17.4, 1.12, 7.4, 4.4, 2).toFixed(2));
+	if (quote)
+		elem.style.setProperty("--lg-quote-size", fitFontSize(quote, "500", elem.hasAttribute("data-lg-quote-italic") ? "italic" : "normal",
+			87, ribbon ? 17.6 : 19.4, 1.15, 6.4, 4.2, 3).toFixed(2));
+	if (printed && !document.fonts.check('700 10px "GC Sans"'))
+		document.fonts.ready.then(() => { if (elem.getAttribute("data-lg-name") === title) setLargeCardImage(elem, card); });
 }
+
+// Largest font size (in % of the card width) at which the text fits a box of width x height (same unit)
+// in at most maxLines lines, measured with the game font
+const fitFontSize = (() => {
+	const ctx = document.createElement("canvas").getContext("2d");
+	const cache = new Map();
+	return (text, weight, style, width, height, lineHeight, max, min, maxLines) => {
+		const key = [text, weight, style, width, height, max, maxLines, document.fonts.check('700 10px "GC Sans"')].join("|");
+		if (cache.has(key))
+			return cache.get(key);
+		ctx.font = style + " " + weight + " 100px \"GC Sans\", Bahnschrift, sans-serif";
+		const space = ctx.measureText(" ").width / 100;
+		const paragraphs = text.split("\n").map(p => p.split(/\s+/).filter(w => w).map(w => ctx.measureText(w).width / 100));
+		const lines = size => paragraphs.reduce((n, words) => {
+			let count = 1, x = 0;
+			for (const w of words) {
+				const ww = w * size;
+				if (x > 0 && x + space * size + ww > width) { count++; x = ww; }
+				else x += (x > 0 ? space * size : 0) + ww;
+			}
+			return n + count;
+		}, 0);
+		let size = max;
+		while (size > min) {
+			const n = lines(size);
+			if (n <= maxLines && n * size * lineHeight <= height)
+				break;
+			size -= 0.1;
+		}
+		size = Math.max(min, size);
+		cache.set(key, size);
+		return size;
+	};
+})();
 
 //      Get Image paths   
 function iconURL(name, ext = "png"){
