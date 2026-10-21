@@ -648,6 +648,8 @@ class Player {
 		if (this.passed ^ hasPassed)
 			document.getElementById("passed-" + this.tag).classList.toggle("passed");
 		this.passed = hasPassed;
+		if (hasPassed && this.tag === "me")
+			document.getElementById("pass-button").classList.add("noclick");
 	}
 	
 	// Sets up board for turn
@@ -1742,11 +1744,18 @@ class Game {
 	
 	// Ends the current turn and may end round. Disables client interraction in client's turn.
 	async endTurn() {
+		// FIX: the game may be left (or restarted) while a notification is shown: stop there
+		const gen = this.generation;
+		const left = () => gen !== this.generation || !this.currPlayer;
 		if (this.currPlayer === player_me)
 			ui.enablePlayer(false);
 		await this.runEffects(this.turnEnd);
+		if (left())
+			return;
 		if (this.currPlayer.passed)
 			await ui.notification(this.currPlayer.tag + "-pass", 1200);
+		if (left())
+			return;
 		if (player_op.passed && player_me.passed)
 			this.endRound();
 		else
@@ -1756,6 +1765,8 @@ class Game {
 				this.currPlayer = this.currPlayer.opponent();
 				AudioManager.playSFX(this.currPlayer === player_me ? "turn_me" : "turn_op");
 				await ui.notification(this.currPlayer.tag + "-turn", 1200);
+				if (left())
+					return;
 			}
 			await this.startTurn();
 		}
@@ -1847,6 +1858,8 @@ class Game {
 		fadeIn(endScreen, 300);
 		ui.enablePlayer(true);
 		this.setState(GameState.END_SCREEN);
+		if (typeof History !== "undefined")
+			History.record(player_op.health <= 0 && player_me.health <= 0 ? "draw" : player_op.health === 0 ? "win" : "lose");
 	}
 
 	exitGame()
@@ -1865,6 +1878,8 @@ class Game {
 	
 	// Returns the client to the deck customization screen
 	returnToCustomization(){
+		if (this.state === GameState.PLAYING && typeof History !== "undefined")
+			History.record("abandon");
 		ui.enablePlayer(false);
 		this.reset();
 		player_me.reset();
@@ -1977,7 +1992,8 @@ class Card {
 			this.power = n;
 			elem.innerHTML = this.power;
 		}
-		elem.style.color = (n>this.basePower) ? "goldenrod" : (n<this.basePower) ? "red" : "";
+		elem.classList.toggle("power-up", n > this.basePower);
+		elem.classList.toggle("power-down", n < this.basePower);
 	}
 	
 	// Resets the power of this card to default
@@ -2144,35 +2160,14 @@ class UI {
 		this.preview = document.getElementsByClassName("card-preview")[0];
 		this.previewCard = null;
 		this.lastRow = null;
-		this.toggleSettings = [];
-		document.getElementById("pass-button").addEventListener("click", () => {
-			player_me.passRound();
-			AudioManager.playSFX('pass');
-		}, false);
 		document.getElementById("click-background").addEventListener("click", () => ui.cancel(), false);
-		this.toggleMusic_elem = document.getElementById("toggle-music");
-		this.toggleSettings.push(this.toggleMusic_elem);
-		this.toggleMusic_elem.addEventListener("click", () => this.toggleMusic(), false);
-		this.toggleNotifications_elem = document.getElementById("toggle-notifications");
-		this.toggleSettings.push(this.toggleNotifications_elem);
-		this.toggleNotifications_elem.addEventListener("click", () => this.toggleNotifications(), false);
-		if (!Settings.notifications.isEnabled())
-			this.toggleNotifications_elem.classList.add("fade");
-		this.toggleSFX_elem = document.getElementById("toggle-sfx");
-		this.toggleSettings.push(this.toggleSFX_elem);
-		this.toggleSFX_elem.addEventListener('click', () => this.toggleSFX())
-		// gear of the board: settings panel (options.js)
-		this.toggleSettings.push(document.getElementById("toggle-options"));
-		if (!Settings.soundEffects.isEnabled())
-			this.toggleSFX_elem.classList.add("fade");
 
-		EventManager.gameOpened.bind(()=>this.toggleSettings.forEach(e=>e.classList.remove('deck-menu')));
-		EventManager.customizationOpened.bind(()=>this.toggleSettings.forEach(e=>e.classList.add('deck-menu')));
+		// top right buttons (history, settings): on the board too, the quit button only on the deck screen
+		const corner = document.getElementById("corner-buttons");
+		EventManager.gameOpened.bind(() => corner.classList.remove("deck-menu"));
+		EventManager.customizationOpened.bind(() => corner.classList.add("deck-menu"));
 
-		[	'.settings-button',
-			'.deck-options',
-			'#pass-button',
-			'#end-screen>button',
+		[	'#end-screen>button',
 			'#op-preview-leader',
 			'#opponent-preview button'
 		].forEach(addMouseEnterSFXBySelector);
@@ -2184,6 +2179,25 @@ class UI {
 		if (enable) main.remove("noclick"); else main.add("noclick");
 	}
 	
+	// Passes the round (hold the space bar or the pass hint, see input.js)
+	passRound() {
+		if (!this.canPass())
+			return false;
+		if (this.previewCard)
+			this.cancel();
+		player_me.passRound();
+		AudioManager.playSFX('pass');
+		return true;
+	}
+
+	// The player may pass: his turn, not passed yet, the board accepts his actions
+	canPass() {
+		return game.state === GameState.PLAYING && game.currPlayer === player_me && !player_me.passed
+			&& !document.getElementById("pass-button").classList.contains("noclick")
+			&& !document.querySelector("main").classList.contains("noclick")
+			&& !Carousel.curr && !Popup.curr;
+	}
+
 	// Called when client toggles the music (see music.js)
 	toggleMusic(){
 		Music.toggle();
@@ -2191,28 +2205,10 @@ class UI {
 
 	toggleNotifications() {
 		Settings.notifications.toggle();
-		const useNotificaitons = Settings.notifications.isEnabled();
-		if (useNotificaitons)
-		{
-			this.toggleNotifications_elem.classList.remove("fade");
-		}
-		else
-		{
-			this.toggleNotifications_elem.classList.add("fade");
-		}
 	}
 
 	toggleSFX() {
 		Settings.soundEffects.toggle();
-		const useSFX = Settings.soundEffects.isEnabled();
-		if (useSFX)
-		{
-			this.toggleSFX_elem.classList.remove("fade");
-		}
-		else
-		{
-			this.toggleSFX_elem.classList.add("fade");
-		}
 	}
 	
 	// Called when the player selects a selectable card
@@ -2694,8 +2690,7 @@ class Carousel {
 				this.previews[i].classList.remove("hide");
 				this.previews[i].classList.remove("noclick");
 			} else {
-				this.previews[i].style.backgroundImage = "";
-				this.previews[i].gcCard = this.previews[i].gcCardData = null;
+				clearLargeCardImage(this.previews[i]);
 				this.previews[i].classList.add("hide");
 				this.previews[i].classList.add("noclick");
 			}
@@ -2706,7 +2701,7 @@ class Carousel {
 	// Clears and quits the current carousel
 	exit() {
 		for (let x of this.previews)
-			x.style.backgroundImage = "";
+			clearLargeCardImage(x);
 		this.elem.classList.add("hide");
 		Carousel.clearCurrent();
 		ui.quitCarousel();
@@ -3846,6 +3841,18 @@ function setLargeCardImage(elem, card, faction) {
 			87, ribbon ? 17.6 : 19.4, 1.15, 6.4, 4.2, 3).toFixed(2));
 	if (printed && !document.fonts.check('700 10px "GC Sans"'))
 		document.fonts.ready.then(() => { if (elem.getAttribute("data-lg-name") === title) setLargeCardImage(elem, card, faction); });
+}
+
+// Empties a large card element: picture and printed texts
+function clearLargeCardImage(elem) {
+	if (!elem)
+		return;
+	elem.style.backgroundImage = "";
+	elem.gcCard = elem.gcCardData = null;
+	elem.removeAttribute("data-lg-name");
+	elem.removeAttribute("data-lg-quote");
+	elem.removeAttribute("data-lg-quote-italic");
+	elem.removeAttribute("data-ribbon");
 }
 
 // Largest font size (in % of the card width) at which the text fits a box of width x height (same unit)

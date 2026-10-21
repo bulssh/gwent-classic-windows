@@ -2,6 +2,24 @@
 
 Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/gwent-classic).
 
+# Version 2.2
+
+## Plateau
+- Roue crantée (paramètres) et nouvel historique des parties en haut à droite, comme dans le menu du deck ; les boutons Passer, musique, son et messages ne sont plus sur le plateau (tout est dans les paramètres).
+- Passer : maintenir la barre Espace, comme dans TW3 (une jauge se remplit ; un appui bref ne passe pas). L'indication « Espace Passer tour (maintenir) » en bas à droite peut aussi être maintenue à la souris.
+- Nombres plus proches de TW3 : puissance des cartes, scores des lignes et score total moins épais ; scores des lignes recentrés dans leurs médaillons ; nombre de cartes du paquet en gras avec une ombre.
+- Puissance augmentée en vert (et non plus en jaune), diminuée en rouge, comme dans TW3.
+- « A passé » n'est plus caché sous le score : il s'affiche sous le panneau de l'adversaire et au-dessus du vôtre.
+- Écran de fin : « Personnaliser » devient « Menu principal ».
+
+## Historique des parties
+- Chaque partie est enregistrée sur l'ordinateur : date, résultat (victoire, défaite, égalité, abandon), votre chef et celui de l'adversaire, score de chaque manche, difficulté.
+- Bilan en tête : parties, victoires, défaites, égalités, taux de victoire, et victoires – défaites pour chaque faction. Bouton pour effacer l'historique.
+
+## Corrections
+- Textes fantômes dans les carrousels (choix du chef, cartes à retirer, défausse) : les places vides gardaient le nom et la citation des cartes précédentes.
+- Quitter une partie pendant un message de tour provoquait une erreur en arrière-plan.
+
 # Version 2.1
 
 ## Menu du deck comme dans The Witcher 3

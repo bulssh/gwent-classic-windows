@@ -687,7 +687,14 @@ const I18N_FR_OFFICIAL = {
 	"opt.quit": "Quitter",
 	"opt.sound": "Son",
 	"key.examine": "Examiner",
-	"key.select": "Sélectionner"
+	"key.select": "Sélectionner",
+	"end.mainMenu": "Menu principal",
+	"key.hold": "Maintenir",
+	"pass.hint": "Passer tour",
+	"history.stats": "Statistiques",
+	"history.win": "Victoire !",
+	"history.lose": "Défaite",
+	"history.draw": "Égalité"
 };
 
 const I18N_EN_OFFICIAL = {
@@ -720,7 +727,14 @@ const I18N_EN_OFFICIAL = {
 	"opt.quit": "Quit",
 	"opt.sound": "Sound",
 	"key.examine": "Examine",
-	"key.select": "Select"
+	"key.select": "Select",
+	"end.mainMenu": "Main Menu",
+	"key.hold": "Hold",
+	"pass.hint": "Pass",
+	"history.stats": "Statistics",
+	"history.win": "Victory!",
+	"history.lose": "Defeat",
+	"history.draw": "Draw"
 };
 
 // English texts printed on the cards of the English version (the pictures carry no text)

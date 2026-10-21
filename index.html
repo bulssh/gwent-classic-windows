@@ -83,7 +83,6 @@
 			</div>
 		</div>
 		
-		<div id="pass-button" class="center" data-i18n-title="tip.pass" data-i18n="pass"></div>
 		
 	</section>
 	
@@ -149,6 +148,11 @@
 	</section>
 	
 	<div id="hand-op"></div>
+
+	<div id="pass-button" class="noclick">
+		<kbd data-i18n="key.space"></kbd><span data-i18n="pass.hint"></span><span class="pass-hold" data-i18n="pass.holdHint"></span>
+		<div class="pass-progress"></div>
+	</div>
 	
 	<section class="card-preview hide">
 		<div class="card-lg"></div>
@@ -223,7 +227,7 @@
 			</tbody>
 		</table>
 		<p class="hide" data-i18n="end.draw"></p>
-		<button data-i18n="end.customize"></button>
+		<button data-i18n="end.mainMenu"></button>
 		<button data-i18n="end.rematch"></button>
 		<button data-i18n="end.newGame"></button>
 	</section>
@@ -246,10 +250,6 @@
 	<div id="faction-dots"></div>
 	<p id="faction-description"></p>
 
-	<div id="deck-corner">
-		<button id="open-options" class="corner-button" data-i18n-title="tip.settings"></button>
-		<button id="quit-app" class="corner-button hide" data-i18n-title="tip.quit"></button>
-	</div>
 	<input type="file" id="add-file" accept=".json,application/json" style="display:none;"/>
 	<a id="download-json" style="display:none;"></a>
 
@@ -302,10 +302,12 @@
 	</div>
 </section>
 
-<div id="toggle-music" class="center deck-menu settings-button"><img src="svg/music.svg"></img></div>
-<div id="toggle-sfx" class="center deck-menu settings-button"><img src="svg/sfx.svg"></img></div>
-<div data-i18n-title="tip.notifications" id="toggle-notifications" class="center deck-menu settings-button"><img src="svg/notification.svg"></img></div>
-<div data-i18n-title="tip.settings" id="toggle-options" class="center deck-menu settings-button"><img src="svg/settings.svg"></img></div>
+<!-- top right, on the deck screen and on the board: history, settings, quit (deck screen) -->
+<div id="corner-buttons" class="deck-menu">
+	<button id="open-history" class="corner-button" data-i18n-title="tip.history"></button>
+	<button id="open-options" class="corner-button" data-i18n-title="tip.settings"></button>
+	<button id="quit-app" class="corner-button hide" data-i18n-title="tip.quit"></button>
+</div>
 
 </div><!-- #stage -->
 
@@ -322,6 +324,7 @@
 <script type="text/javascript" src="wem2ogg.js"></script>
 <script type="text/javascript" src="music.js"></script>
 <script type="text/javascript" src="options.js"></script>
+<script type="text/javascript" src="history.js"></script>
 <script type="text/javascript" src="input.js"></script>
 </body>
 

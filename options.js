@@ -358,6 +358,8 @@ const Options = (() => {
 	function open() {
 		if (isOpen())
 			return;
+		if (typeof History !== "undefined" && History.isOpen())
+			History.close();
 		panel.classList.remove("hide");
 		refresh();
 		AudioManager.playSFX("menu_opening");
@@ -382,7 +384,6 @@ const Options = (() => {
 
 	// gear buttons and quit button
 	document.getElementById("open-options").addEventListener("click", () => open());
-	document.getElementById("toggle-options").addEventListener("click", () => open());
 	const quit = document.getElementById("quit-app");
 	if (desktop) {
 		quit.classList.remove("hide");
@@ -391,7 +392,7 @@ const Options = (() => {
 				invoke("quit_app").catch(e => console.warn(e));
 		});
 	}
-	["open-options", "quit-app"].forEach(id => document.getElementById(id).addEventListener("mouseenter", CLICK_EVENT_SFX));
+	["open-options", "open-history", "quit-app"].forEach(id => document.getElementById(id).addEventListener("mouseenter", CLICK_EVENT_SFX));
 
 	// the saved display mode (the window may have been restored differently); without a saved
 	// mode (first launch of this version), the current state of the window is kept

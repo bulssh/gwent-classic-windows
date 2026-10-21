@@ -173,6 +173,45 @@ const Input = (() => {
 
 	const deckMenuOpen = () => !document.getElementById("deck-customization").classList.contains("hide");
 
+	// ---------- pass: hold the space bar (or the pass hint) like in TW3 ----------
+
+	const HOLD_MS = 900;
+	const passHint = document.getElementById("pass-button");
+	let hold = null;
+
+	function startHold(source) {
+		if (hold || !ui.canPass())
+			return;
+		const anim = passHint.querySelector(".pass-progress").animate(
+			[{transform: "scaleX(0)"}, {transform: "scaleX(1)"}], {duration: HOLD_MS, easing: "linear", fill: "forwards"});
+		passHint.classList.add("holding");
+		hold = {source, anim};
+		anim.onfinish = () => {
+			if (!hold || hold.anim !== anim)
+				return;
+			stopHold();
+			ui.passRound();
+		};
+	}
+
+	function stopHold() {
+		if (!hold)
+			return;
+		hold.anim.cancel();
+		hold = null;
+		passHint.classList.remove("holding");
+	}
+
+	passHint.addEventListener("pointerdown", e => {
+		if (e.button !== 0)
+			return;
+		e.preventDefault();
+		startHold("pointer");
+	});
+	["pointerup", "pointercancel", "pointerleave"].forEach(type => passHint.addEventListener(type, () => { if (hold?.source === "pointer") stopHold(); }));
+	document.addEventListener("keyup", e => { if (e.code === "Space" && hold?.source === "key") stopHold(); });
+	window.addEventListener("blur", stopHold);
+
 	function inGame() {
 		return game.state === GameState.PLAYING && document.getElementById("deck-customization").classList.contains("hide");
 	}
@@ -205,10 +244,11 @@ const Input = (() => {
 			}
 			return;
 		}
-		if (Options.isOpen()) {
+		if (Options.isOpen() || History.isOpen()) {
 			if (key === "Escape") {
 				e.preventDefault();
 				Options.close();
+				History.close();
 			}
 			return;
 		}
@@ -232,6 +272,12 @@ const Input = (() => {
 				e.preventDefault();
 				Options.open();
 			}
+			return;
+		}
+		if (e.code === "Space") {
+			e.preventDefault();
+			if (!e.repeat && inGame())
+				startHold("key");
 			return;
 		}
 		if (key === "Escape") {

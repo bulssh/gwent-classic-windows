@@ -482,11 +482,19 @@ const Music = (() => {
 			invoke("music_open_folder").catch(e => console.warn(e));
 	}
 
+	// hover panels of the sound buttons, when the page has such buttons (the settings panel has the
+	// same controls, see options.js)
 	function setupPanels() {
-		Panels.make("music", t("tip.music"), () => volume, setVolume, true);
-		Panels.make("sfx", t("tip.sfx"), () => AudioManager.volume, v => AudioManager.setVolume(v), false);
-		Panels.attach("music", document.getElementById("toggle-music"));
-		Panels.attach("sfx", document.getElementById("toggle-sfx"));
+		const musicButton = document.getElementById("toggle-music");
+		const sfxButton = document.getElementById("toggle-sfx");
+		if (musicButton) {
+			Panels.make("music", t("tip.music"), () => volume, setVolume, true);
+			Panels.attach("music", musicButton);
+		}
+		if (sfxButton) {
+			Panels.make("sfx", t("tip.sfx"), () => AudioManager.volume, v => AudioManager.setVolume(v), false);
+			Panels.attach("sfx", sfxButton);
+		}
 		Panels.refresh();
 	}
 

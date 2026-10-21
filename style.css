@@ -164,61 +164,6 @@ main {
 	z-index: -100;
 }
 
-.settings-button {
-	position: absolute;
-	width: calc(2.5 * var(--vw));
-	height: calc(2.5 * var(--vw));
-}
-.settings-button>img{
-	width: calc(2.5 * var(--vw));
-	height: calc(2.5 * var(--vw));
-	filter:drop-shadow(0px 0px 2px black);
-}
-
-.settings-button.fade>img {
-	 opacity: 0.2; 
-}
-
-.settings-button.fade:hover>img {
-	opacity: 0.3;
-}
-.settings-button:hover>img {
-	filter:drop-shadow(0px 0px 3px rgba(255, 255, 255, 0.5));
-}
-
-#toggle-music {
-    top: calc(48.9 * var(--vw));
-    left: calc(14 * var(--vw));
-}
-#toggle-sfx {
-	top: calc(48.9 * var(--vw));
-    left: calc(17.2 * var(--vw));
-}
-
-#toggle-notifications {
-	top: calc(48.9 * var(--vw));
-    left: calc(20 * var(--vw));
-}
-#toggle-options {
-	top: calc(48.9 * var(--vw));
-	left: calc(22.8 * var(--vw));
-}
-#toggle-options > img { transition: transform 0.3s ease; }
-#toggle-options:hover > img { transform: rotate(45deg); }
-#toggle-options[data-title]:hover::after { left: 0; }
-
-/* deck screen: sound and settings are in the settings panel (gear, top right) */
-.settings-button.deck-menu {
-	display: none !important;
-}
-
-#pass-button[data-title]:hover::after
-{
-	bottom: calc(-2.2 * var(--vw));
-	left: calc(-0.45 * var(--vw))
-}
-
-
 /* ----------- notification bar ------------------ */
 
 #notification-bar {
@@ -820,10 +765,10 @@ main { background-image: url('img/boardtest8.png'); }
 	
 	margin-bottom: -12%;
 	
-	color: black;
-	text-shadow: 0 0 5px white;
-	font-size: calc(2.3 * var(--vw));
-	font-weight: bold;
+	color: #111;
+	text-shadow: 0 0 calc(0.12 * var(--vw)) rgba(255, 255, 255, 0.7);
+	font-size: calc(2.05 * var(--vw));
+	font-weight: 600;
 	
 	background-size: contain;
 	background-repeat: no-repeat;
@@ -942,34 +887,25 @@ main { background-image: url('img/boardtest8.png'); }
 	top:80%;
 }
 
+/* "Passed": under the opponent's panel, above the player's one, centred on the score (like TW3) */
+#passed-op, #passed-me {
+	position: absolute;
+	left: 100.5%;
+	width: auto;
+	height: auto;
+	margin: 0;
+	white-space: nowrap;
+	transform: translateX(-50%);
+	pointer-events: none;
+	z-index: 2;
+}
+#passed-op { top: 103%; }
+#passed-me { top: auto; bottom: 103%; }
 .passed {
-	height: 0%;
-	width: 0%;
-	left:90%;
-	top: 87%;
-	
-	color: tan;
-	font-size: calc(1.5 * var(--vw));
-	font-weight: bold;
-	text-shadow: 1px 1px 2px black;
-}
-#passed-me{ top: -3%;}
-
-#pass-button {
-	top: 82%;
-	left: 63%;
-	width:20%;
-	height: 4%;
-	
-	font-size: calc(2 * var(--vw));
-	font-weight: bold;
-	
-	border: calc(.1 * var(--vw)) solid goldenrod;
-	border-radius: calc(.5 * var(--vw));
-	background-color: rgba(20,20,20,.9);
-}
-#pass-button:hover {
-	text-shadow: 0px 0px 3px rgba(255, 255, 255, 0.5);
+	color: #d9c08a;
+	font-size: calc(1.3 * var(--vw));
+	font-weight: 600;
+	text-shadow: 0 calc(0.08 * var(--vw)) calc(0.25 * var(--vw)) #000, 0 0 calc(0.5 * var(--vw)) rgba(0, 0, 0, 0.9);
 }
 
 /* ------------- middle pannel ------------------ */
@@ -1016,10 +952,10 @@ main { background-image: url('img/boardtest8.png'); }
 	top:7%;
 	height: 95%;
 	margin-bottom: -12.65%;
-	font-size: calc(1.8 * var(--vw));
+	font-size: calc(1.62 * var(--vw));
+	font-weight: 500;
 	
-	color: black;
-	text-shadow: 0 0 5px white;
+	color: #1e1e1e;
 }
 
 .row-special {
@@ -1166,8 +1102,10 @@ main { background-image: url('img/boardtest8.png'); }
 	
 	z-index: 1;
 	
-	color:tan;
+	color: #e6d3a8;
 	font-size: calc(1.3 * var(--vw));
+	font-weight: 700;
+	text-shadow: 0 calc(0.08 * var(--vw)) calc(0.2 * var(--vw)) #000, 0 0 calc(0.35 * var(--vw)) rgba(0, 0, 0, 0.8);
 }
 
 .cardpile .deck-card {
@@ -1311,15 +1249,18 @@ main { background-image: url('img/boardtest8.png'); }
 	text-align: center;
 }
 
-/* top right: settings and quit */
-#deck-corner {
+/* top right of the deck screen and of the board: history, settings, quit (deck screen only) */
+#corner-buttons {
 	position: absolute;
-	top: calc(1.3 * var(--vw));
+	top: calc(1.1 * var(--vw));
 	right: calc(1.4 * var(--vw));
 	display: flex;
-	gap: calc(0.7 * var(--vw));
-	z-index: 4;
+	gap: calc(0.75 * var(--vw));
+	z-index: 86;
 }
+#corner-buttons:not(.deck-menu) #quit-app { display: none; }
+#open-history { background-image: url("svg/history.svg"); }
+#open-history:hover { transform: rotate(-30deg); }
 .corner-button {
 	position: relative;
 	width: calc(2.1 * var(--vw));
@@ -1617,15 +1558,13 @@ kbd {
 	left: 7%;
 	width: 50%;
 	heighth:  50%;
-	font-size: calc(1 * var(--vw));
-	font-weight: bold;
-	color: black;
-	text-shadow: 0 0 calc(.1 * var(--vw)) white;
+	font-size: calc(0.95 * var(--vw));
+	font-weight: 500;
+	color: #111;
 }
 
 .hero > div:nth-child(1) > div {
-	color: white;
-	text-shadow: 0 0 calc(.1 * var(--vw)) black;
+	color: #f4f0e6;
 }
 
 
@@ -1860,7 +1799,7 @@ body::before {
 #card-leader > div[data-ribbon][data-lg-name]:not([data-lg-name=""])::after { left: 25%; right: 5%; }
 /* French: no English-style Capitalized Words */
 .lang-fr .deck-name, .lang-fr .name, .lang-fr #end-screen th, .lang-fr .card-description > h1 { text-transform: none; }
-.lang-fr #pass-button { font-size: calc(1.55 * var(--vw)); }
+
 button { font-family: inherit; }
 #end-screen > button { white-space: nowrap; }
 .lang-fr #end-screen > button { font-size: calc(1.25 * var(--vw)); }
@@ -2396,3 +2335,151 @@ button { font-family: inherit; }
 	color: #8a7a62;
 }
 .opt-panel > footer > span { display: inline-flex; align-items: center; gap: calc(0.4 * var(--vw)); }
+
+
+/* ----------- 2.2: numbers of the board (TW3 weights), pass, history ----------- */
+
+/* row scores: centred on the badges painted on the board (measured at 1920 px: 1 px = 0.052 vw) */
+#field-op .field-row[data-row="siege"] .row-score { transform: translate(calc(0.03 * var(--vw)), calc(-0.21 * var(--vw))); }
+#field-op .field-row[data-row="ranged"] .row-score { transform: translate(calc(0.02 * var(--vw)), calc(-0.31 * var(--vw))); }
+#field-op .field-row[data-row="close"] .row-score { transform: translate(calc(0.03 * var(--vw)), 0); }
+#field-me .field-row[data-row="close"] .row-score { transform: translate(calc(0.05 * var(--vw)), calc(-0.23 * var(--vw))); }
+#field-me .field-row[data-row="ranged"] .row-score { transform: translate(calc(0.08 * var(--vw)), calc(-0.23 * var(--vw))); }
+#field-me .field-row[data-row="siege"] .row-score { transform: translate(calc(0.08 * var(--vw)), calc(0.03 * var(--vw))); }
+
+/* strength of a unit: green when increased, red when decreased (TW3) */
+.card > div:nth-child(1) > div.power-up { color: #1c8a1c; font-weight: 600; }
+.card > div:nth-child(1) > div.power-down { color: #c0141a; font-weight: 600; }
+
+/* empty places of the carousel: nothing at all (they keep their place in the row) */
+#carousel .card-lg.hide { visibility: hidden; }
+
+/* pass: hold the space bar, or hold this hint with the mouse */
+#pass-button {
+	position: absolute;
+	right: calc(1.6 * var(--vw));
+	bottom: calc(0.9 * var(--vw));
+	display: flex;
+	align-items: center;
+	gap: calc(0.45 * var(--vw));
+	padding: calc(0.3 * var(--vw)) calc(0.7 * var(--vw)) calc(0.35 * var(--vw));
+	font-size: calc(0.95 * var(--vw));
+	font-weight: 600;
+	color: #e8d7b0;
+	background: rgba(14, 11, 8, 0.82);
+	border: 1px solid #5a4a2e;
+	border-radius: calc(0.25 * var(--vw));
+	box-shadow: 0 0 calc(0.8 * var(--vw)) rgba(0, 0, 0, 0.8);
+	overflow: hidden;
+	user-select: none;
+	z-index: 3;
+	transition: opacity 0.2s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+#pass-button kbd { font-size: calc(0.75 * var(--vw)); }
+#pass-button .pass-hold { font-weight: 400; color: #9c8a6c; font-size: calc(0.8 * var(--vw)); }
+#pass-button:hover { border-color: #a88a4f; box-shadow: 0 0 calc(0.8 * var(--vw)) rgba(218, 165, 32, 0.35); }
+#pass-button.noclick { opacity: 0.35; }
+#pass-button .pass-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: calc(0.22 * var(--vw));
+	background: linear-gradient(to right, #b8975a, #ffe2a0);
+	box-shadow: 0 0 calc(0.4 * var(--vw)) rgba(255, 210, 120, 0.8);
+	transform: scaleX(0);
+	transform-origin: left center;
+}
+#pass-button.holding { border-color: #e2c27a; }
+/* the deck screen and the end screen cover it */
+
+/* ----------- history of the games (history.js) ----------- */
+#history {
+	position: absolute;
+	inset: 0;
+	z-index: 950;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(4, 3, 2, 0.74);
+	backdrop-filter: blur(2px);
+}
+#history.hide { display: none; }
+.hist-panel { width: calc(70 * var(--vw)); display: flex; flex-direction: column; }
+.hist-summary {
+	display: flex;
+	justify-content: center;
+	gap: calc(2.6 * var(--vw));
+	margin: calc(1 * var(--vw)) 0 calc(0.4 * var(--vw));
+}
+.hist-stat { display: flex; flex-direction: column; align-items: center; min-width: calc(5 * var(--vw)); }
+.hist-stat > b { font-size: calc(1.7 * var(--vw)); font-weight: 600; color: #f0dcae; }
+.hist-stat > span { font-size: calc(0.78 * var(--vw)); letter-spacing: 0.12em; text-transform: uppercase; color: #9c8a6c; }
+.hist-stat.win > b { color: #d8b45c; }
+.hist-stat.lose > b { color: #c0574f; }
+.hist-stat.draw > b { color: #a9a9a9; }
+.hist-factions {
+	display: flex;
+	justify-content: center;
+	gap: calc(1.6 * var(--vw));
+	margin-bottom: calc(0.8 * var(--vw));
+}
+.hist-faction { display: flex; align-items: center; gap: calc(0.35 * var(--vw)); font-size: calc(0.9 * var(--vw)); color: #cdbd9a; }
+.hist-faction.none { opacity: 0.35; }
+.hist-shield {
+	display: inline-block;
+	flex: none;
+	width: calc(1.25 * var(--vw));
+	height: calc(1.4 * var(--vw));
+	background: center / contain no-repeat;
+}
+.hist-table-wrap {
+	max-height: calc(30 * var(--vw));
+	overflow-y: auto;
+	border-top: 1px solid rgba(141, 116, 69, 0.4);
+}
+.hist-table-wrap::-webkit-scrollbar { width: calc(0.45 * var(--vw)); }
+.hist-table-wrap::-webkit-scrollbar-track { background: transparent; }
+.hist-table-wrap::-webkit-scrollbar-thumb { background: #6e5a35; border: none; border-radius: 99px; }
+.hist-table { width: 100%; border-collapse: collapse; font-size: calc(0.86 * var(--vw)); }
+.hist-table.hide { display: none; }
+.hist-table th {
+	position: sticky;
+	top: 0;
+	padding: calc(0.45 * var(--vw)) calc(0.5 * var(--vw));
+	text-align: left;
+	font-size: calc(0.75 * var(--vw));
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #b0905a;
+	background: #18140f;
+}
+.hist-table td {
+	padding: calc(0.4 * var(--vw)) calc(0.5 * var(--vw));
+	border-top: 1px solid rgba(141, 116, 69, 0.18);
+	color: #d8c9a6;
+	white-space: nowrap;
+}
+.hist-table tbody tr:hover td { background: rgba(90, 70, 40, 0.18); }
+.hist-side { display: inline-flex; align-items: center; gap: calc(0.4 * var(--vw)); }
+.hist-result { font-weight: 600; }
+.hist-result.win { color: #d8b45c; }
+.hist-result.lose, .hist-result.abandon { color: #c0574f; }
+.hist-result.draw { color: #a9a9a9; }
+.hist-rounds > span { display: inline-block; margin-right: calc(0.8 * var(--vw)); color: #9c8a6c; font-variant-numeric: tabular-nums; }
+.hist-rounds > span.won { color: #e8d7b0; }
+.hist-empty { margin: calc(2 * var(--vw)) 0; text-align: center; color: #8f806a; }
+.hist-panel > footer { justify-content: space-between; align-items: center; }
+.hist-clear {
+	font-family: inherit;
+	font-size: calc(0.8 * var(--vw));
+	color: #c9b48a;
+	background: rgba(64, 51, 33, 0.6);
+	border: 1px solid #6e5a35;
+	border-radius: calc(0.2 * var(--vw));
+	padding: calc(0.25 * var(--vw)) calc(0.6 * var(--vw));
+	transition: background 0.15s ease, color 0.15s ease;
+}
+.hist-clear:hover:not(:disabled) { background: rgba(122, 97, 55, 0.95); color: #fff; }
+.hist-clear:disabled { opacity: 0.4; }
