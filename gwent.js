@@ -2134,11 +2134,8 @@ class UI {
 			AudioManager.playSFX('pass');
 		}, false);
 		document.getElementById("click-background").addEventListener("click", () => ui.cancel(), false);
-		this.youtube;
-		this.ytActive;
 		this.toggleMusic_elem = document.getElementById("toggle-music");
 		this.toggleSettings.push(this.toggleMusic_elem);
-		this.toggleMusic_elem.classList.add("fade");
 		this.toggleMusic_elem.addEventListener("click", () => this.toggleMusic(), false);
 		this.toggleNotifications_elem = document.getElementById("toggle-notifications");
 		this.toggleSettings.push(this.toggleNotifications_elem);
@@ -2173,48 +2170,9 @@ class UI {
 		if (enable) main.remove("noclick"); else main.add("noclick");
 	}
 	
-	// Initializes the youtube background music object
-	initYouTube(){
-		this.youtube = new YT.Player('youtube', {
-			videoId: "UE9fPWy1_o4",
-			playerVars:  { "autoplay" : 1, "controls" : 0, "loop" : 1, "playlist" : "UE9fPWy1_o4", "rel" : 0, "version" : 3, "modestbranding" : 1 },
-			events: { 'onStateChange': initButton }
-		});
-		
-		function initButton(){
-			if (ui.ytActive !== undefined)
-				return;
-			ui.ytActive = true;
-			ui.youtube.playVideo();
-			let timer = setInterval( () => {
-				if (ui.youtube.getPlayerState() !== YT.PlayerState.PLAYING)
-					ui.youtube.playVideo();
-				else {
-					clearInterval(timer);
-					ui.toggleMusic_elem.classList.remove("fade");
-					if (!Settings.music.isEnabled())
-					{
-						setTimeout(()=>ui.toggleMusic(), 10);
-					}
-				}
-			}, 500);
-		}
-	}
-	
-	// Called when client toggles the music
+	// Called when client toggles the music (see music.js)
 	toggleMusic(){
-		// FIX: YouTube API not loaded (offline): YT is undefined
-		if (!this.youtube || typeof YT === "undefined" || !this.youtube.getPlayerState)
-			return;
-		const isPlaying = this.youtube.getPlayerState() === YT.PlayerState.PLAYING;
-		if (isPlaying) {
-			this.youtube?.pauseVideo();
-			this.toggleMusic_elem.classList.add("fade");
-		} else {
-			this.youtube?.playVideo();
-			this.toggleMusic_elem.classList.remove("fade");
-		}
-		Settings.music.setEnabled(!isPlaying);
+		Music.toggle();
 	}
 
 	toggleNotifications() {
@@ -3296,6 +3254,20 @@ class DeckMaker {
 class AudioManager
 {
 	static source = {};
+	static volume = (() => {
+		try {
+			const v = parseFloat(localStorage.getItem("gc-sfx-volume"));
+			return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 1;
+		} catch (e) {
+			return 1;
+		}
+	})();
+
+	static setVolume(v)
+	{
+		AudioManager.volume = Math.min(1, Math.max(0, v));
+		try { localStorage.setItem("gc-sfx-volume", String(AudioManager.volume)); } catch (e) {}
+	}
 
 	static init()
 	{
@@ -3316,6 +3288,7 @@ class AudioManager
 				return;
 			if (audio instanceof Audio)
 			{
+				audio.volume = AudioManager.volume;
 				const isPlaying = audio.currentTime > 0 && !audio.paused && !audio.ended 
 				if (isPlaying)
 				{
@@ -3787,7 +3760,9 @@ function audioURL(name, ext = "mp3") {
 // Get audio instance
 function getAudio(name, ext = "mp3")
 {
-	return new Audio(audioURL(name, ext));
+	const audio = new Audio(audioURL(name, ext));
+	audio.volume = AudioManager.volume;
+	return audio;
 }
 // Play sound effect
 async function playAudio(name, ext = "mp3")
@@ -3839,10 +3814,6 @@ function sleepUntil(predicate, ms) {
 	});
 }
 
-// Initializes the interractive YouTube object
-function onYouTubeIframeAPIReady() {
-	ui.initYouTube();
-}
 
 /*----------------------------------------------------*/
 
