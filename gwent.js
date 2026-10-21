@@ -600,6 +600,9 @@ class Player {
 		document.getElementById("deck-name-" +this.tag).textContent = factionName(deck.faction);
 		let x = document.querySelector("#stats-" +this.tag+ " .profile-img > div > div");
 		x.style.backgroundImage = iconURL("deck_shield_" + deck.faction);
+		// the character chosen by the player, the leader of the opponent's deck
+		if (typeof Options !== "undefined")
+			Options.showPortrait(this);
 	}
 	
 	// Sets default values
@@ -2158,10 +2161,8 @@ class UI {
 		this.toggleSFX_elem = document.getElementById("toggle-sfx");
 		this.toggleSettings.push(this.toggleSFX_elem);
 		this.toggleSFX_elem.addEventListener('click', () => this.toggleSFX())
-		this.toggleLanguage_elem = document.getElementById("toggle-language");
-		this.toggleLanguage_elem.innerHTML = LANG === "fr" ? "<b>FR</b>&nbsp;·&nbsp;EN" : "FR&nbsp;·&nbsp;<b>EN</b>";
-		this.toggleLanguage_elem.addEventListener("click", () => setLanguage(LANG === "fr" ? "en" : "fr"));
-		this.toggleSettings.push(this.toggleLanguage_elem);
+		// gear of the board: settings panel (options.js)
+		this.toggleSettings.push(document.getElementById("toggle-options"));
 		if (!Settings.soundEffects.isEnabled())
 			this.toggleSFX_elem.classList.add("fade");
 
@@ -2792,26 +2793,69 @@ class DeckMaker {
 		document.getElementById("add-opponent").addEventListener("change", () => this.uploadOpponentDeck(), false);
 
 
-		// TW3-like faction selector: arrows and neighbouring shields around the faction name
+		// TW3 faction selector: previous faction ◄ current faction ► next faction, dots under it
 		document.getElementById("faction-left").addEventListener("click", () => this.cycleFaction(-1), false);
 		document.getElementById("faction-right").addEventListener("click", () => this.cycleFaction(1), false);
-		["faction-left", "faction-right"].forEach(id => document.getElementById(id).addEventListener("mouseenter", CLICK_EVENT_SFX));
+		document.getElementById("faction-prev-name").addEventListener("click", () => this.cycleFaction(-1), false);
+		document.getElementById("faction-next-name").addEventListener("click", () => this.cycleFaction(1), false);
+		["faction-left", "faction-right", "faction-prev-name", "faction-next-name"].forEach(id => document.getElementById(id).addEventListener("mouseenter", CLICK_EVENT_SFX));
 		
-		document.getElementById("download-deck").addEventListener("click", () => this.downloadDeck(), false);
+		// deck import (settings panel) and start
 		document.getElementById("add-file").addEventListener("change", () => this.uploadPlayerDeck(), false);
 		document.getElementById("start-game").addEventListener("click", () => this.startNewGame(), false);
-		const diffButtons = [...document.querySelectorAll("#difficulty > button")];
-		const showDifficulty = () => diffButtons.forEach(b => b.classList.toggle("selected", b.dataset.level === Settings.difficulty.get()));
-		diffButtons.forEach(b => {
-			b.addEventListener("click", () => {
-				Settings.difficulty.set(b.dataset.level);
-				AudioManager.playSFX("ui_card_bank");
-				showDifficulty();
-			});
-			b.addEventListener("mouseenter", CLICK_EVENT_SFX);
-		});
-		showDifficulty();
 		document.getElementById("start-game").addEventListener("mouseenter", CLICK_EVENT_SFX, false);
+
+		// card type filters of both lists (TW3: all, close combat, ranged, siege, heroes, weather, special)
+		this.filters = {bank: "all", deck: "all"};
+		for (const list of ["bank", "deck"]) {
+			const head = document.getElementById("card-" + list + "-head");
+			const box = head.querySelector(".list-filters");
+			for (const f of DeckMaker.FILTERS) {
+				const b = document.createElement("button");
+				b.className = "list-filter";
+				b.dataset.filter = f;
+				b.style.setProperty("--icon", "url('img/icons/filter_" + f + ".png')");
+				b.setAttribute("aria-label", t("filter." + f));
+				b.addEventListener("click", () => this.setFilter(list, f));
+				b.addEventListener("mouseenter", CLICK_EVENT_SFX);
+				box.appendChild(b);
+			}
+			this.showFilter(list);
+		}
+	}
+
+	static FILTERS = ["all", "close", "ranged", "siege", "hero", "weather", "special"];
+
+	static matchesFilter(card, filter) {
+		const hero = card.ability.split(" ").includes("hero");
+		switch (filter) {
+			case "close": return card.row === "close" || card.row === "agile";
+			case "ranged": return card.row === "ranged" || card.row === "agile";
+			case "siege": return card.row === "siege";
+			case "hero": return hero;
+			case "weather": return card.deck === "weather";
+			case "special": return card.deck === "special";
+			default: return true;
+		}
+	}
+
+	setFilter(list, filter) {
+		if (this.filters[list] === filter)
+			return;
+		this.filters[list] = filter;
+		AudioManager.playSFX("ui_card");
+		this.showFilter(list);
+		const elem = list === "bank" ? this.bank_elem : this.deck_elem;
+		elem.scrollTop = 0;
+		this.update();
+		elem.getAnimations().forEach(a => a.cancel());
+		elem.animate([{opacity: 0}, {opacity: 1}], {duration: 220, easing: "ease-out"});
+	}
+
+	showFilter(list) {
+		const head = document.getElementById("card-" + list + "-head");
+		head.querySelector(".list-filter-name").textContent = t("filter." + this.filters[list]);
+		head.querySelectorAll(".list-filter").forEach(b => b.classList.toggle("selected", b.dataset.filter === this.filters[list]));
 	}
 
 	loadFactionDeck(faction, force = false)
@@ -2840,50 +2884,62 @@ class DeckMaker {
 	// Shows the next (1) or previous (-1) faction
 	cycleFaction(step) {
 		const order = Object.keys(factions);
-		const i = order.indexOf(this.faction);
+		const i = order.indexOf(this.targetFaction || this.faction);
 		this.changeFaction(order[(i + step + order.length) % order.length], step);
 	}
 
-	// Loads a faction chosen by the player, with a sliding transition in the direction of the change
-	changeFaction(faction, direction = 0) {
-		if (!this.isValidFaction(faction) || faction === this.faction)
+	// Loads a faction chosen by the player: the title slides in the direction of the change, the
+	// cards of the previous faction fade out and those of the new one fade in (like in TW3)
+	async changeFaction(faction, direction = 0) {
+		if (!this.isValidFaction(faction) || faction === (this.targetFaction || this.faction))
 			return;
 		AudioManager.playSFX("ui_card_bank");
-		this.loadFactionDeck(faction);
+		this.showFactionHeader(faction);
 		const title = document.getElementById("faction-title").querySelector("h1");
-		const lists = [this.bank_elem, this.deck_elem, document.getElementById("faction-description"), this.leader_elem];
-		for (const e of [title, ...lists]) {
-			e.classList.remove("slide-from-left", "slide-from-right", "fade-in");
-			void e.offsetWidth; // restart the animation
-		}
-		title.classList.add(direction < 0 ? "slide-from-left" : "slide-from-right");
-		lists.forEach(e => e.classList.add("fade-in"));
+		title.getAnimations().forEach(a => a.cancel());
+		title.animate([{opacity: 0, transform: "translateX(calc(" + (direction < 0 ? -2 : 2) + " * var(--vw)))"}, {opacity: 1, transform: "none"}],
+			{duration: 300, easing: "cubic-bezier(.2,.8,.3,1)"});
+		const busy = !!this.targetFaction;
+		this.targetFaction = faction;
+		if (busy)
+			return; // the fade out already running will load the last faction asked for
+		const parts = [this.bank_elem, this.deck_elem, this.leader_elem, document.getElementById("faction-description"), document.getElementById("deck-stats")];
+		const out = parts.map(e => {
+			e.getAnimations().forEach(a => a.cancel());
+			return e.animate([{opacity: 1}, {opacity: 0}], {duration: 160, easing: "ease-in", fill: "forwards"});
+		});
+		await Promise.all(out.map(a => a.finished.catch(() => {})));
+		const target = this.targetFaction;
+		this.targetFaction = null;
+		this.loadFactionDeck(target);
 		this.bank_elem.scrollTop = this.deck_elem.scrollTop = 0;
+		parts.forEach((e, i) => {
+			out[i].cancel();
+			e.animate([{opacity: 0}, {opacity: 1}], {duration: 320, easing: "ease-out"});
+		});
 	}
 
-	// Faction name, shield and the neighbouring factions (dimmed, clickable)
+	// Faction name and shield, names of the previous and next factions, one dot per faction
 	showFactionHeader(faction_name) {
 		const title = document.getElementById("faction-title");
 		title.querySelector(".faction-name").textContent = factionName(faction_name);
 		title.querySelector(".faction-shield-main").style.backgroundImage = iconURL("deck_shield_" + faction_name);
 		const order = Object.keys(factions);
 		const i = order.indexOf(faction_name);
-		const at = k => order[(i + k + order.length * 2) % order.length];
-		const fill = (elem, offsets) => {
-			elem.innerHTML = "";
-			for (const k of offsets) {
-				const f = at(k);
-				const b = document.createElement("button");
-				b.className = "faction-shield" + (Math.abs(k) === 2 ? " far" : "");
-				b.style.backgroundImage = iconURL("deck_shield_" + f);
-				b.setAttribute("data-title", factionName(f));
-				b.addEventListener("click", () => this.changeFaction(f, Math.sign(k)));
-				b.addEventListener("mouseenter", CLICK_EVENT_SFX);
-				elem.appendChild(b);
-			}
-		};
-		fill(document.getElementById("faction-prev"), [-2, -1]);
-		fill(document.getElementById("faction-next"), [1, 2]);
+		const at = k => order[(i + k + order.length) % order.length];
+		document.getElementById("faction-prev-name").textContent = factionName(at(-1));
+		document.getElementById("faction-next-name").textContent = factionName(at(1));
+		const dots = document.getElementById("faction-dots");
+		if (dots.children.length !== order.length) {
+			dots.innerHTML = "";
+			order.forEach((f, k) => {
+				const d = document.createElement("button");
+				d.addEventListener("click", () => this.changeFaction(f, Math.sign(k - order.indexOf(this.targetFaction || this.faction))));
+				d.setAttribute("aria-label", factionName(f));
+				dots.appendChild(d);
+			});
+		}
+		[...dots.children].forEach((d, k) => d.classList.toggle("selected", k === i));
 	}
 
 	// Called when client selects a deck faction. Clears previous cards and makes valid cards available.
@@ -2947,6 +3003,7 @@ class DeckMaker {
 		setLargeCardImage(elem, card_data, this.faction);
 		elem.classList.add("card-lg");
 		let count = document.createElement("div");
+		count.className = "count";
 		elem.appendChild(count);
 		container_elem.appendChild(elem);
 		
@@ -2962,19 +3019,13 @@ class DeckMaker {
 	
 	// Updates the card preview elements when any changes are made to the deck
 	update(){
-		for (let x of this.bank) {
-			if (x.count)
-				x.elem.classList.remove("hide");
-			else
-				x.elem.classList.add("hide");
-		}
+		const filters = this.filters || {bank: "all", deck: "all"};
+		for (let x of this.bank)
+			x.elem.classList.toggle("hide", !x.count || !DeckMaker.matchesFilter(card_dict[x.index], filters.bank));
 		let total = 0, units = 0, special = 0, strength = 0, hero = 0;
 		for (let x of this.deck) {
 			let card_data = card_dict[x.index];
-			if (x.count)
-				x.elem.classList.remove("hide");
-			else
-				x.elem.classList.add("hide");
+			x.elem.classList.toggle("hide", !x.count || !DeckMaker.matchesFilter(card_dict[x.index], filters.deck));
 			total += x.count;
 			if (card_data.deck === "special" || card_data.deck === "weather") {
 				special += x.count;

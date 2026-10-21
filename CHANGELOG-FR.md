@@ -1,6 +1,42 @@
-# Gwent Classic 2.0 — journal des modifications
+# Gwent Classic — journal des modifications
 
 Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/gwent-classic).
+
+# Version 2.1
+
+## Menu du deck comme dans The Witcher 3
+- En-tête de faction : « faction précédente ◄ écusson + faction ► faction suivante », un point par faction, avantage de faction en dessous. Flèches du clavier, clic sur les noms ou sur les points.
+- Changement de faction : les cartes de l'ancienne faction s'estompent, celles de la nouvelle apparaissent en fondu ; le titre glisse dans le sens du changement.
+- « Collection de cartes » et « Cartes du jeu » avec le filtre en cours (« TOUTES LES CARTES »…) et les 7 icônes de tri de TW3 : toutes, combat rapproché, distance, siège, héros, météo, spéciales (indépendantes pour chaque liste).
+- Cartes des listes : nom seul, centré, et nombre d'exemplaires « x2 » en bas à gauche ; barre de défilement fine.
+- Raccourcis affichés en bas à droite : Entrée (commencer la partie), ◄ ► (changer de faction), clic droit (examiner), Échap (paramètres).
+- Roue crantée et croix (quitter le jeu) en haut à droite ; le reste du menu est épuré comme dans TW3.
+
+## Paramètres (roue crantée, Échap dans le menu du deck, roue crantée du plateau en partie)
+- Affichage : Fenêtré, Fenêtre sans bord (couvre tout l'écran), Plein écran — mémorisé ; F11 / Alt+Entrée bascule entre le plein écran et le mode fenêtre choisi. Une application WebView n'a pas de plein écran « exclusif » comme un jeu DirectX : le plein écran est celui de Windows, la différence avec la fenêtre sans bord est surtout la rapidité du passage aux autres fenêtres.
+- Son : musique oui/non et volume, source de la musique et ses actions (extraire de The Witcher 3, importer, ouvrir le dossier, revenir au streaming), effets sonores oui/non et volume.
+- Partie : difficulté, messages de jeu, langue (depuis le menu du deck).
+- Personnage : 20 personnages (Geralt, Ciri, Yennefer, Triss, Jaskier, Zoltan, Vesemir, Régis, Avallac'h, Olgierd, Gaunter de Meuré, Keira, Roche, Dijkstra, Philippa, Iorveth, Eithné, Letho, Cerys, Sac-à-souris). Purement cosmétique : portrait et nom à côté de votre score.
+- Deck : importer / exporter.
+- Libellés officiels de TW3 (« Mode d'affichage », « Fenêtre sans bord », « Volume musique », « Volume bruitages », « Mode de difficulté »…).
+
+## Plateau
+- Portraits à côté des scores : le personnage choisi pour vous, le visage du chef de son deck pour l'adversaire (Foltest, Emhyr, Eredin, Francesca, Crach an Craite, Roi Bran…), avec leurs noms (aussi sur l'écran de fin).
+- Carte jouée (par vous ou l'adversaire) : d'abord présentée sur la droite, puis elle glisse vers sa rangée ; petites braises à sa pose ; les héros ont un éclat doré.
+- Charge (Sonnerie de la charge) : la rangée concernée prend une lueur dorée.
+- La couronne de laurier autour du score du meneur « respire » doucement.
+- Fin de manche : la gemme de vie se fissure puis vole en éclats.
+- Carrousels fluides (les cartes glissent), main qui se soulève au survol, pièce qui tourne, fondus des fenêtres, du zoom et de l'aperçu.
+
+## Textes officiels
+- Toutes les citations et descriptions françaises (et anglaises) lues dans les fichiers de votre installation de The Witcher 3 (lecture seule). Les images des cartes ne portent plus de texte : noms et citations sont écrits dans la langue choisie, avec la police du jeu fournie (identique sur tous les PC).
+- Cartes neutres, spéciales et météo : ruban aux couleurs de la faction du deck, comme dans TW3.
+- Chefs : images corrigées (plusieurs chefs d'asundr montraient l'image d'un autre), capacité de Cerys (« Invocation de Vierges au bouclier »), notification de l'avantage du Nilfgaard en cas d'égalité.
+
+## Musique
+- Lecture locale des 7 musiques de Gwynt de The Witcher 3, extraites de votre installation (lecture seule, convertisseur intégré, rien n'est téléchargé) ; streaming YouTube en secours. Curseur de volume au survol des boutons son.
+
+# Version 2.0
 
 ## Affichage et entrées
 - Le jeu est une scène 16:9 mise à l'échelle dans la fenêtre (bandes latérales floutées si le format diffère) : plus aucune barre de défilement ni défilement parasite, quelle que soit la taille de la fenêtre ou la mise à l'échelle Windows.
@@ -10,12 +46,12 @@ Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/g
 - Les cartes ne « sautent » plus au survol (elles s'éloignaient du pointeur) ; les cibles possibles du Leurre clignotent.
 
 ## Français
-- Interface, notifications, popups, deck, fin de partie entièrement en français ; bascule FR/EN en haut à droite du menu.
+- Interface, notifications, popups, deck, fin de partie entièrement en français ; bascule FR/EN dans les Paramètres (roue crantée).
 - Noms des cartes, capacités, chefs et factions d'après la VF officielle de The Witcher 3 et le manuel officiel du Gwynt (CD PROJEKT RED).
 - Le texte anglais imprimé sur les grandes cartes est effacé et remplacé par le nom français (les rubans de faction sont conservés).
 
 ## Difficulté
-- Facile / Normal / Difficile (en haut à gauche du menu du deck, mémorisé).
+- Facile / Normal / Difficile (dans les Paramètres, mémorisé).
 - Normal ne passe plus quand il est mené (il offrait la manche).
 - Difficile joue sans hasard : espions en premier, victoire de manche au moindre coût, plus de Leurre/Espion joué « pour gagner », ne s'épuise pas en manche 1, gestion de l'avantage de cartes.
 - Facile garde sa main de départ et joue presque au hasard.

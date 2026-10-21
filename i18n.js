@@ -130,6 +130,20 @@ fr: {
 	"music.offerText": "The Witcher 3 est installé sur cet ordinateur. Extraire ses 7 musiques de Gwynt (lecture seule, environ 65 Mo) pour les écouter sans connexion, au lieu du streaming YouTube ?",
 	"music.offerYes": "Extraire",
 	"music.offerNo": "Plus tard",
+	"tip.settings": "Paramètres (Échap)",
+	"tip.quit": "Quitter le jeu",
+	"quit.title": "Quitter Gwent Classic ?",
+	"quit.text": "Vos decks et vos réglages sont enregistrés automatiquement.",
+	"opt.game": "Partie",
+	"opt.deck": "Deck",
+	"opt.hint.windowed": "Fenêtre redimensionnable, avec sa barre de titre.",
+	"opt.hint.borderless": "Fenêtre sans bordure couvrant tout l'écran : on passe instantanément aux autres applications.",
+	"opt.hint.fullscreen": "Plein écran. F11 ou Alt+Entrée pour basculer à tout moment.",
+	"opt.languageInGame": "La langue se change depuis le menu du deck.",
+	"opt.characterHint": "portrait affiché à côté de votre score",
+	"key.enter": "Entrée",
+	"key.escape": "Échap",
+	"key.rightClick": "Clic droit",
 },
 en: {
 	"player.me": "Player 1",
@@ -251,11 +265,26 @@ en: {
 	"music.offerText": "The Witcher 3 is installed on this computer. Extract its 7 gwent tracks (read only, about 65 MB) to play them offline instead of streaming them from YouTube?",
 	"music.offerYes": "Extract",
 	"music.offerNo": "Later",
+	"tip.settings": "Settings (Esc)",
+	"tip.quit": "Quit the game",
+	"quit.title": "Quit Gwent Classic?",
+	"quit.text": "Your decks and settings are saved automatically.",
+	"opt.game": "Game",
+	"opt.deck": "Deck",
+	"opt.hint.windowed": "Resizable window with its title bar.",
+	"opt.hint.borderless": "Borderless window covering the whole screen: switching to other applications is instant.",
+	"opt.hint.fullscreen": "Full screen. F11 or Alt+Enter toggles it at any time.",
+	"opt.languageInGame": "The language can be changed from the deck menu.",
+	"opt.characterHint": "portrait shown next to your score",
+	"key.enter": "Enter",
+	"key.escape": "Esc",
+	"key.rightClick": "Right click",
 }
 };
 
 // official TW3 wording wins over the hand-written strings above
 Object.assign(I18N.fr, I18N_FR_OFFICIAL);
+Object.assign(I18N.en, I18N_EN_OFFICIAL);
 
 function t(key, ...args) {
 	let s = I18N[LANG][key];

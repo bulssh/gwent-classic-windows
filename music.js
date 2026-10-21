@@ -427,6 +427,7 @@ const Music = (() => {
 		}
 
 		function refresh() {
+			listeners.forEach(f => f());
 			for (const id in panels) {
 				const p = panels[id];
 				p.show();
@@ -434,9 +435,7 @@ const Music = (() => {
 					continue;
 				const source = p.elem.querySelector(".vp-source");
 				const actions = p.elem.querySelector(".vp-actions");
-				source.textContent = busy && statusText ? statusText
-					: mode === "local" ? t("music.sourceLocal", tracks.length)
-					: mode === "stream" ? t("music.sourceStream") : "";
+				source.textContent = sourceText();
 				if (!desktop) {
 					actions.innerHTML = "";
 					continue;
@@ -444,7 +443,7 @@ const Music = (() => {
 				const buttons = [
 					["music.extract", () => extractFromTW3()],
 					["music.import", importFiles],
-					["music.folder", () => invoke("music_open_folder")],
+					["music.folder", openFolder],
 				];
 				if (mode === "local")
 					buttons.push(["music.clear", clearLocal]);
@@ -463,8 +462,25 @@ const Music = (() => {
 			}
 		}
 
-		return {make, attach, refresh, status};
+		function sourceText() {
+			return busy && statusText ? statusText
+				: mode === "local" ? t("music.sourceLocal", tracks.length)
+				: mode === "stream" ? t("music.sourceStream") : "";
+		}
+
+		return {make, attach, refresh, status, sourceText};
 	})();
+
+	// the settings panel follows the state of the music
+	const listeners = [];
+	function onChange(f) {
+		listeners.push(f);
+	}
+
+	function openFolder() {
+		if (desktop)
+			invoke("music_open_folder").catch(e => console.warn(e));
+	}
 
 	function setupPanels() {
 		Panels.make("music", t("tip.music"), () => volume, setVolume, true);
@@ -478,7 +494,8 @@ const Music = (() => {
 	updateButton();
 	init();
 
-	return {toggle, setVolume, onYouTubeReady, extractFromTW3, importFiles,
+	return {toggle, setVolume, onYouTubeReady, extractFromTW3, importFiles, clearLocal, openFolder, onChange, desktop,
+		get volume() { return volume; }, get busy() { return busy; }, get status() { return Panels.sourceText(); },
 		get mode() { return mode; }, get tracks() { return tracks.slice(); }, get playing() { return mode === "local" && !audio.paused; },
 		get position() { return audio.currentTime; }};
 })();

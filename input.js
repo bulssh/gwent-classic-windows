@@ -166,21 +166,12 @@ const Input = (() => {
 
 	// ---------- keyboard ----------
 
-	async function toggleFullscreen() {
-		try {
-			const w = window.__TAURI__?.window?.getCurrentWindow?.();
-			if (w) {
-				await w.setFullscreen(!(await w.isFullscreen()));
-				return;
-			}
-		} catch (e) {
-			console.warn(e);
-		}
-		if (document.fullscreenElement)
-			document.exitFullscreen();
-		else
-			document.documentElement.requestFullscreen?.().catch(() => {});
+	// F11 / Alt+Enter: full screen <-> the window mode chosen in the settings (options.js)
+	function toggleFullscreen() {
+		Options.toggleFullscreen();
 	}
+
+	const deckMenuOpen = () => !document.getElementById("deck-customization").classList.contains("hide");
 
 	function inGame() {
 		return game.state === GameState.PLAYING && document.getElementById("deck-customization").classList.contains("hide");
@@ -214,6 +205,13 @@ const Input = (() => {
 			}
 			return;
 		}
+		if (Options.isOpen()) {
+			if (key === "Escape") {
+				e.preventDefault();
+				Options.close();
+			}
+			return;
+		}
 		const c = Carousel.curr;
 		if (c && !c.elem.classList.contains("hide")) {
 			if (key === "ArrowLeft" || key === "ArrowUp") { e.preventDefault(); c.shift(null, -1); }
@@ -222,10 +220,18 @@ const Input = (() => {
 			else if (key === "Escape") { e.preventDefault(); c.cancel(); }
 			return;
 		}
-		// deck menu: change faction with the arrow keys (like the arrows around the faction name)
-		if ((key === "ArrowLeft" || key === "ArrowRight") && !document.getElementById("deck-customization").classList.contains("hide")) {
-			e.preventDefault();
-			dm.cycleFaction(key === "ArrowLeft" ? -1 : 1);
+		// deck menu (TW3 keys): arrows change the faction, Enter starts the game, Escape opens the settings
+		if (deckMenuOpen()) {
+			if (key === "ArrowLeft" || key === "ArrowRight") {
+				e.preventDefault();
+				dm.cycleFaction(key === "ArrowLeft" ? -1 : 1);
+			} else if (key === "Enter" && !e.repeat) {
+				e.preventDefault();
+				dm.startNewGame();
+			} else if (key === "Escape") {
+				e.preventDefault();
+				Options.open();
+			}
 			return;
 		}
 		if (key === "Escape") {
