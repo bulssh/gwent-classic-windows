@@ -220,6 +220,12 @@ const Input = (() => {
 			else if (key === "Escape") { e.preventDefault(); c.cancel(); }
 			return;
 		}
+		// deck menu: change faction with the arrow keys (like the arrows around the faction name)
+		if ((key === "ArrowLeft" || key === "ArrowRight") && !document.getElementById("deck-customization").classList.contains("hide")) {
+			e.preventDefault();
+			dm.cycleFaction(key === "ArrowLeft" ? -1 : 1);
+			return;
+		}
 		if (key === "Escape") {
 			e.preventDefault();
 			if (ui.previewCard && !document.getElementById("click-background").classList.contains("noclick"))

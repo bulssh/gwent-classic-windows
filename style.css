@@ -1195,28 +1195,7 @@ main { background-image: url('img/boardtest8.png'); }
 	z-index: 85;
 }
 
-#faction-title {
-	position: absolute;
-	height: 5%;
-	width: 100%;
-	top: 6%;
-}
 
-#deck-customization h1 {
-    position: absolute;
-    font-size: calc(1.45 * var(--vw));
-    color: #dedede;
-    line-height: 220%;
-    text-transform: capitalize;
-    padding: 0 3%;
-	
-
-	
-	top: -60%;
-	
-    background-size: contain;
-    background-repeat: no-repeat;
-}
 
 #faction-description {
 	position: absolute;
@@ -1228,27 +1207,6 @@ main { background-image: url('img/boardtest8.png'); }
 	text-align: center;
 }
 
-.deck-options{
-	position: absolute;
-	font-size: calc(1 * var(--vw));
-	color: white;
-	top: 15%;
-}
-.deck-options:hover {
-	text-decoration: underline;
-}
-
-#download-deck {
-	left: 55%;
-}
-
-#upload-deck {
-	left: 40%;
-}
-
-#change-faction {
-	left: 47%;
-}
 
 .card-array {
 	position: absolute;
@@ -1364,90 +1322,7 @@ main { background-image: url('img/boardtest8.png'); }
 #deck-stats > p:nth-child(8) { background-image: url('img/icons/deck_stats_strength.png'); }
 #deck-stats > p:nth-child(10) { background-image: url('img/icons/deck_stats_hero.png'); }
 
-#start-game {
-	position: absolute;
-	top: 86%;
-	left: 46.65%;
-	width: 6%;
-	height: 3%;
-	font-size: calc(0.98 * var(--vw));
-	white-space: nowrap;
-	color: white;
-	background-color: rgb(20,20,20);
-	border: calc(0.1 * var(--vw)) ridge rgb(30,30,30);
-}
-#start-game:hover {
-	box-shadow: 0 0 calc(0.75 * var(--vw)) white;
-}
-
-#opponent-preview {
-    position: absolute;
-    top: calc(50.9 * var(--vw));
-	width: 100%;
-    left: calc(-0.3 * var(--vw));
-    justify-content: center;
-    align-items: center;
-	flex-direction: column;
-}
-#opponent-preview>div>p {
-	color: #82735f;
-	font-size: calc(1.05 * var(--vw));
-	text-align: center;
-	margin-bottom: 2.5%;
-	margin-top: 0;
-}
-#opponent-preview>div {
-}
-#op-preview-faction {
-	background-size: contain;
-    background-repeat: no-repeat;
-	height: calc(2 * var(--vw));
-	width: 	calc(2 * var(--vw));
-}
-#op-preview-faction {
-	/* visibility: hidden; */
-}
-#op-preview-leader::after {
-	left: calc(46 * var(--vw));
-	bottom: calc(-1.5 * var(--vw));
-}
-#op-preview-leader>p {
-	font-size: calc(1 * var(--vw));
-	color:white;
-	margin: calc(0.2 * var(--vw));
-}
-#op-preview-leader:hover {
-	text-decoration: underline;
-	text-decoration-color: white;
-}
-#opponent-preview button {
-	background-color: transparent;
-	border: none;
-	background-repeat: no-repeat;
-	background-size: contain;
-	width: calc(1.8 * var(--vw));
-	height: calc(1.9 * var(--vw));
-}
-#op-preview-open {
-	background-image: url("svg/view.svg");	
-    width: calc(1.5 * var(--vw)) !important;
-    height: calc(1.5 * var(--vw)) !important;
-}
-#op-preview-open:hover {
-	filter: drop-shadow(0px 0px 3px rgba(255, 255, 255, 0.5));
-}
-#op-preview-open::after {
-	left: calc(-2.9 * var(--vw));
-}
-#op-preview-clear {
-	background-image: url("svg/trash.svg");
-}
-#op-preview-clear:hover {
-	filter: drop-shadow(0 0 3px red);
-}
-#op-preview-clear::after {
-	left: calc(-2.9 * var(--vw));
-}
+/* start button and opponent deck: see "deck menu (TW3 style)" below */
 
 .card-contianer-title {
 	position: absolute;
@@ -1783,11 +1658,6 @@ body::before {
 	font-weight: bold;
 	letter-spacing: calc(.05 * var(--vw));
 }
-#toggle-language.deck-menu {
-	top: 2.2%;
-	right: 2%;
-	z-index: 86;
-}
 #toggle-language:not(.deck-menu) { display: none; }
 #toggle-language[data-title]:hover::after { left: auto; right: 0; }
 
@@ -1797,10 +1667,6 @@ body::before {
 .lang-fr .card-description > h1, .lang-fr #faction-title h1, .lang-fr #popup button { text-transform: none; }
 .lang-fr .card-description > h1::first-letter { text-transform: uppercase; }
 .card-contianer-title { white-space: nowrap; width: auto; }
-#upload-deck { left: auto; right: 59%; }
-#change-faction { left: 50%; transform: translateX(-50%); }
-#download-deck { left: 59%; }
-#start-game { width: auto; min-width: 6%; padding: 0 calc(0.6 * var(--vw)); left: 50%; transform: translateX(-50%); }
 
 /* name next to the faction ribbon */
 .lang-fr .card-lg[data-ribbon][data-lg-name]:not([data-lg-name=""])::after,
@@ -1880,3 +1746,224 @@ button { font-family: inherit; }
 }
 .volume-pop .vp-actions button:hover:not(:disabled) { background: rgba(122, 97, 55, 0.95); color: #fff; }
 .volume-pop .vp-actions button:disabled { opacity: 0.45; }
+
+
+/* ----------- deck menu (TW3 style) ----------- */
+
+/* faction selector: neighbouring factions, arrows, current faction */
+#faction-title {
+	position: absolute;
+	top: 3.3%;
+	left: 0;
+	width: 100%;
+	height: 5.4%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(0.8 * var(--vw));
+	z-index: 3;
+}
+#faction-title h1 {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(0.7 * var(--vw));
+	width: calc(22 * var(--vw));
+	margin: 0;
+	font-size: calc(1.6 * var(--vw));
+	font-weight: 600;
+	color: #e8dcc2;
+	text-shadow: 0 0 calc(0.6 * var(--vw)) #000;
+	white-space: nowrap;
+}
+#faction-title .faction-shield-main {
+	flex: none;
+	width: calc(2.9 * var(--vw));
+	height: calc(3.2 * var(--vw));
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	filter: drop-shadow(0 0 calc(0.4 * var(--vw)) rgba(0, 0, 0, 0.9));
+}
+.faction-neighbors { display: flex; align-items: center; gap: calc(0.5 * var(--vw)); }
+.faction-shield {
+	position: relative;
+	width: calc(2.1 * var(--vw));
+	height: calc(2.35 * var(--vw));
+	padding: 0;
+	border: none;
+	background-color: transparent;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	opacity: 0.5;
+	filter: grayscale(0.5) brightness(0.85);
+	transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+}
+.faction-shield.far { width: calc(1.75 * var(--vw)); height: calc(1.95 * var(--vw)); opacity: 0.32; }
+.faction-shield:hover { opacity: 1; filter: none; transform: scale(1.12); }
+.faction-shield[data-title]:hover::after { bottom: calc(-2.3 * var(--vw)); left: 50%; transform: translateX(-50%); font-size: calc(1 * var(--vw)); }
+.faction-arrow {
+	position: relative;
+	width: calc(1.9 * var(--vw));
+	height: calc(1.9 * var(--vw));
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: #c9a45c;
+	transition: color 0.15s ease, transform 0.15s ease, filter 0.15s ease;
+}
+.faction-arrow::before {
+	content: "";
+	position: absolute;
+	inset: 22%;
+	border-left: calc(0.22 * var(--vw)) solid currentColor;
+	border-bottom: calc(0.22 * var(--vw)) solid currentColor;
+	transform: rotate(45deg);
+}
+#faction-right::before { transform: rotate(-135deg); }
+.faction-arrow:hover { color: #ffe2a0; filter: drop-shadow(0 0 calc(0.4 * var(--vw)) rgba(255, 200, 100, 0.7)); }
+#faction-left:hover { transform: translateX(calc(-0.15 * var(--vw))); }
+#faction-right:hover { transform: translateX(calc(0.15 * var(--vw))); }
+.faction-arrow[data-title]:hover::after { bottom: calc(-2.3 * var(--vw)); left: 50%; transform: translateX(-50%); font-size: calc(1 * var(--vw)); }
+#faction-description { top: 9.2%; left: 15%; width: 70%; }
+
+/* transitions when the faction changes */
+@keyframes gc-slide-from-left { from { opacity: 0; transform: translateX(calc(-2 * var(--vw))); } to { opacity: 1; transform: none; } }
+@keyframes gc-slide-from-right { from { opacity: 0; transform: translateX(calc(2 * var(--vw))); } to { opacity: 1; transform: none; } }
+@keyframes gc-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.slide-from-left { animation: gc-slide-from-left 0.28s ease-out; }
+.slide-from-right { animation: gc-slide-from-right 0.28s ease-out; }
+.fade-in { animation: gc-fade-in 0.3s ease-out; }
+
+/* deck file buttons and language switch, top right */
+#deck-io {
+	position: absolute;
+	top: 2.2%;
+	right: 2%;
+	display: flex;
+	align-items: center;
+	gap: calc(0.4 * var(--vw));
+	z-index: 86;
+}
+#deck-io .deck-button, #deck-io #toggle-language {
+	position: relative;
+	top: auto;
+	right: auto;
+	width: auto;
+	height: auto;
+	display: inline-flex;
+	align-items: center;
+	font-family: inherit;
+	font-size: calc(0.95 * var(--vw));
+	color: #b9a17a;
+	background-color: rgb(20, 20, 20);
+	border: calc(0.1 * var(--vw)) solid rgb(45, 45, 45);
+	padding: calc(0.2 * var(--vw)) calc(0.7 * var(--vw));
+	border-radius: calc(0.2 * var(--vw));
+	line-height: 1.25;
+	white-space: nowrap;
+	transition: box-shadow 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+#deck-io .deck-button:hover, #deck-io #toggle-language:hover { box-shadow: 0 0 calc(0.5 * var(--vw)) goldenrod; color: #ffd479; border-color: #7a5d26; }
+#deck-io [data-title]:hover::after { bottom: calc(-2.3 * var(--vw)); left: auto; right: 0; font-size: calc(1 * var(--vw)); }
+#deck-io #toggle-language { margin-left: calc(0.6 * var(--vw)); }
+
+/* deck statistics: TW3 colours */
+#deck-stats > p.stat-good { color: #7cb342; }
+#deck-stats > p.stat-bad { color: #d23b2e; }
+
+/* start button */
+#start-game {
+	position: absolute;
+	top: 85.4%;
+	left: 50%;
+	transform: translateX(-50%);
+	min-width: calc(12 * var(--vw));
+	height: calc(2.5 * var(--vw));
+	padding: 0 calc(1.4 * var(--vw));
+	font-family: inherit;
+	font-size: calc(1.05 * var(--vw));
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	color: #f0dcae;
+	background: linear-gradient(rgba(72, 56, 33, 0.95), rgba(28, 22, 14, 0.95));
+	border: 1px solid #a88a4f;
+	border-radius: calc(0.25 * var(--vw));
+	box-shadow: inset 0 0 calc(0.6 * var(--vw)) rgba(0, 0, 0, 0.7), 0 0 calc(0.8 * var(--vw)) rgba(0, 0, 0, 0.8);
+	text-shadow: 0 1px 2px #000;
+	transition: box-shadow 0.18s ease, color 0.18s ease, border-color 0.18s ease, filter 0.18s ease;
+}
+#start-game::before, #start-game::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	width: calc(2.4 * var(--vw));
+	height: 1px;
+	background: linear-gradient(to right, transparent, #a88a4f);
+}
+#start-game::before { right: calc(100% + 0.5 * var(--vw)); }
+#start-game::after { left: calc(100% + 0.5 * var(--vw)); transform: scaleX(-1); }
+#start-game:hover {
+	color: #fff4d6;
+	border-color: #e2c27a;
+	box-shadow: inset 0 0 calc(0.6 * var(--vw)) rgba(0, 0, 0, 0.5), 0 0 calc(1 * var(--vw)) rgba(226, 194, 122, 0.55);
+}
+#start-game:active { filter: brightness(0.85); transform: translateX(-50%) translateY(1px); }
+
+/* opponent deck: one line under the start button */
+#opponent-preview {
+	position: absolute;
+	top: calc(51.4 * var(--vw));
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: calc(0.5 * var(--vw));
+	white-space: nowrap;
+	font-size: calc(0.95 * var(--vw));
+}
+#opponent-preview .op-label { color: #82735f; }
+#op-preview-leader {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: calc(0.35 * var(--vw));
+	padding: calc(0.15 * var(--vw)) calc(0.7 * var(--vw));
+	color: #d8c9a6;
+	background-color: rgba(20, 20, 20, 0.9);
+	border: 1px solid #4a3d27;
+	border-radius: calc(0.2 * var(--vw));
+	transition: box-shadow 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+#op-preview-leader:hover { color: #ffd479; border-color: #7a5d26; box-shadow: 0 0 calc(0.5 * var(--vw)) goldenrod; }
+#op-preview-leader > p { margin: 0; font-size: inherit; color: inherit; }
+#op-preview-leader[data-title]:hover::after { bottom: calc(-2.2 * var(--vw)); left: 50%; transform: translateX(-50%); font-size: calc(1 * var(--vw)); }
+#op-preview-faction {
+	width: calc(1.2 * var(--vw));
+	height: calc(1.35 * var(--vw));
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+#opponent-preview button {
+	position: relative;
+	width: calc(1.5 * var(--vw));
+	height: calc(1.5 * var(--vw));
+	padding: 0;
+	background-color: transparent;
+	border: none;
+	background-repeat: no-repeat;
+	background-size: contain;
+	background-position: center;
+	opacity: 0.8;
+	transition: opacity 0.15s ease, filter 0.15s ease;
+}
+#opponent-preview button:hover { opacity: 1; }
+#opponent-preview button[data-title]:hover::after { bottom: calc(-2.2 * var(--vw)); left: 50%; transform: translateX(-50%); font-size: calc(1 * var(--vw)); }
+#op-preview-open { background-image: url("svg/view.svg"); }
+#op-preview-open:hover { filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6)); }
+#op-preview-clear { background-image: url("svg/trash.svg"); }
+#op-preview-clear:hover { filter: drop-shadow(0 0 3px red); }

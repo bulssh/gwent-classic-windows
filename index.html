@@ -236,18 +236,22 @@
 </main>
 
 <section id="deck-customization">
-	<div id="faction-title" class="center">
-		<h1></h1>
+	<div id="faction-title">
+		<div id="faction-prev" class="faction-neighbors"></div>
+		<button id="faction-left" class="faction-arrow" data-i18n-title="deck.prevFaction"></button>
+		<h1><span class="faction-shield-main"></span><span class="faction-name"></span></h1>
+		<button id="faction-right" class="faction-arrow" data-i18n-title="deck.nextFaction"></button>
+		<div id="faction-next" class="faction-neighbors"></div>
 	</div>
 	<p id="faction-description"></p>
-	
-	<label id="upload-deck" class="deck-options">
-		<input type="file" id="add-file" accept=".json,application/json" style="display:none;"/><span data-i18n="deck.upload"></span>
-	</label>
-	
-	<a id="change-faction" class="deck-options" data-i18n="deck.changeFaction"></a>
-	
-	<a id="download-deck" class="deck-options" data-i18n="deck.download"></a>
+
+	<div id="deck-io">
+		<label id="upload-deck" class="deck-button" data-i18n-title="deck.uploadTip">
+			<input type="file" id="add-file" accept=".json,application/json" style="display:none;"/><span data-i18n="deck.upload"></span>
+		</label>
+		<button id="download-deck" class="deck-button" data-i18n="deck.download" data-i18n-title="deck.downloadTip"></button>
+		<div data-i18n-title="tip.language" id="toggle-language" class="center deck-menu settings-button"></div>
+	</div>
 	<a id="download-json" style="display:none;"></a>
 	
 	<h2 id="card-bank-title" class="card-contianer-title" data-i18n="deck.collection"></h2>
@@ -278,27 +282,22 @@
 		<button data-level="normal" data-i18n="difficulty.normal" data-i18n-title="difficulty.normal.tip"></button>
 		<button data-level="hard" data-i18n="difficulty.hard" data-i18n-title="difficulty.hard.tip"></button>
 	</div>
-	<button id="start-game" data-i18n="deck.start"></button>
-	<div id="opponent-preview" class="center">
-		<div>
-			<p data-i18n="deck.opponent"></p>
-		</div>
-		<div class="center">
-			<button id="op-preview-open" class="hide" data-i18n-title="tip.viewOpponent"></button>
-			<div id="op-preview-faction" class="hide"></div>
-			<label id="op-preview-leader" for="add-opponent" data-i18n-title="tip.uploadOpponent">
-				<input type="file" id="add-opponent" accept=".json,application/json" style="display:none;"/>
-				<p data-i18n="deck.random"></p>
-			</label>
-			<button id="op-preview-clear" class="hide" data-i18n-title="tip.clearOpponent"></button>
-		</div>
+	<button id="start-game"><span data-i18n="deck.start"></span></button>
+	<div id="opponent-preview">
+		<span class="op-label" data-i18n="deck.opponent"></span>
+		<label id="op-preview-leader" for="add-opponent" data-i18n-title="tip.uploadOpponent">
+			<input type="file" id="add-opponent" accept=".json,application/json" style="display:none;"/>
+			<span id="op-preview-faction" class="hide"></span>
+			<p data-i18n="deck.random"></p>
+		</label>
+		<button id="op-preview-open" class="hide" data-i18n-title="tip.viewOpponent"></button>
+		<button id="op-preview-clear" class="hide" data-i18n-title="tip.clearOpponent"></button>
 	</div>
 </section>
 
 <div id="toggle-music" class="center deck-menu settings-button"><img src="svg/music.svg"></img></div>
 <div id="toggle-sfx" class="center deck-menu settings-button"><img src="svg/sfx.svg"></img></div>
 <div data-i18n-title="tip.notifications" id="toggle-notifications" class="center deck-menu settings-button"><img src="svg/notification.svg"></img></div>
-<div data-i18n-title="tip.language" id="toggle-language" class="center deck-menu settings-button"></div>
 
 </div><!-- #stage -->
 

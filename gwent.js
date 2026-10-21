@@ -2146,7 +2146,7 @@ class UI {
 		this.toggleSettings.push(this.toggleSFX_elem);
 		this.toggleSFX_elem.addEventListener('click', () => this.toggleSFX())
 		this.toggleLanguage_elem = document.getElementById("toggle-language");
-		this.toggleLanguage_elem.innerHTML = LANG === "fr" ? "<b>FR</b> · EN" : "FR · <b>EN</b>";
+		this.toggleLanguage_elem.innerHTML = LANG === "fr" ? "<b>FR</b>&nbsp;·&nbsp;EN" : "FR&nbsp;·&nbsp;<b>EN</b>";
 		this.toggleLanguage_elem.addEventListener("click", () => setLanguage(LANG === "fr" ? "en" : "fr"));
 		this.toggleSettings.push(this.toggleLanguage_elem);
 		if (!Settings.soundEffects.isEnabled())
@@ -2736,8 +2736,10 @@ class DeckMaker {
 		document.getElementById("add-opponent").addEventListener("change", () => this.uploadOpponentDeck(), false);
 
 
-		this.change_elem = document.getElementById("change-faction");
-		this.change_elem.addEventListener("click", () => this.selectFaction(), false);
+		// TW3-like faction selector: arrows and neighbouring shields around the faction name
+		document.getElementById("faction-left").addEventListener("click", () => this.cycleFaction(-1), false);
+		document.getElementById("faction-right").addEventListener("click", () => this.cycleFaction(1), false);
+		["faction-left", "faction-right"].forEach(id => document.getElementById(id).addEventListener("mouseenter", CLICK_EVENT_SFX));
 		
 		document.getElementById("download-deck").addEventListener("click", () => this.downloadDeck(), false);
 		document.getElementById("add-file").addEventListener("change", () => this.uploadPlayerDeck(), false);
@@ -2779,14 +2781,62 @@ class DeckMaker {
 		}
 	}
 	
+	// Shows the next (1) or previous (-1) faction
+	cycleFaction(step) {
+		const order = Object.keys(factions);
+		const i = order.indexOf(this.faction);
+		this.changeFaction(order[(i + step + order.length) % order.length], step);
+	}
+
+	// Loads a faction chosen by the player, with a sliding transition in the direction of the change
+	changeFaction(faction, direction = 0) {
+		if (!this.isValidFaction(faction) || faction === this.faction)
+			return;
+		AudioManager.playSFX("ui_card_bank");
+		this.loadFactionDeck(faction);
+		const title = document.getElementById("faction-title").querySelector("h1");
+		const lists = [this.bank_elem, this.deck_elem, document.getElementById("faction-description"), this.leader_elem];
+		for (const e of [title, ...lists]) {
+			e.classList.remove("slide-from-left", "slide-from-right", "fade-in");
+			void e.offsetWidth; // restart the animation
+		}
+		title.classList.add(direction < 0 ? "slide-from-left" : "slide-from-right");
+		lists.forEach(e => e.classList.add("fade-in"));
+		this.bank_elem.scrollTop = this.deck_elem.scrollTop = 0;
+	}
+
+	// Faction name, shield and the neighbouring factions (dimmed, clickable)
+	showFactionHeader(faction_name) {
+		const title = document.getElementById("faction-title");
+		title.querySelector(".faction-name").textContent = factionName(faction_name);
+		title.querySelector(".faction-shield-main").style.backgroundImage = iconURL("deck_shield_" + faction_name);
+		const order = Object.keys(factions);
+		const i = order.indexOf(faction_name);
+		const at = k => order[(i + k + order.length * 2) % order.length];
+		const fill = (elem, offsets) => {
+			elem.innerHTML = "";
+			for (const k of offsets) {
+				const f = at(k);
+				const b = document.createElement("button");
+				b.className = "faction-shield" + (Math.abs(k) === 2 ? " far" : "");
+				b.style.backgroundImage = iconURL("deck_shield_" + f);
+				b.setAttribute("data-title", factionName(f));
+				b.addEventListener("click", () => this.changeFaction(f, Math.sign(k)));
+				b.addEventListener("mouseenter", CLICK_EVENT_SFX);
+				elem.appendChild(b);
+			}
+		};
+		fill(document.getElementById("faction-prev"), [-2, -1]);
+		fill(document.getElementById("faction-next"), [1, 2]);
+	}
+
 	// Called when client selects a deck faction. Clears previous cards and makes valid cards available.
 	setFaction(faction_name, force){
 		if (!faction_name)
 			return;
 		if (!force && this.faction === faction_name)
 			return false;
-		this.elem.getElementsByTagName("h1")[0].textContent = factionName(faction_name);
-		this.elem.getElementsByTagName("h1")[0].style.backgroundImage = iconURL("deck_shield_" + faction_name);
+		this.showFactionHeader(faction_name);
 		document.getElementById("faction-description").textContent = factionDesc(faction_name);
 		
 		this.leaders = 
@@ -2914,8 +2964,10 @@ class DeckMaker {
 		stats.children[7].innerHTML = this.stats.strength;
 		stats.children[9].innerHTML = this.stats.hero;
 		
-		stats.children[3].style.color = this.stats.units < 22 ? "red" : "";
-		stats.children[5].style.color = (this.stats.special > 10) ? "red" : "";
+		// TW3 colours: unit count red until 22, special count green (red above the limit of 10)
+		stats.children[3].classList.toggle("stat-bad", this.stats.units < 22);
+		stats.children[5].classList.toggle("stat-bad", this.stats.special > 10);
+		stats.children[5].classList.toggle("stat-good", this.stats.special <= 10);
 	}
 	
 	// Opens a Carousel to allow the client to select a leader for their deck
@@ -2934,20 +2986,6 @@ class DeckMaker {
 			setLargeCardImage(this.leader_elem.children[1], data.card);
 			Settings.getFactionSettings(this.leader.card.deck).setLeader(this.leader);
 			AudioManager.playSFX('ui_card_bank');
-		}, () => true, false, true);
-		Carousel.curr.index = index;
-		Carousel.curr.update();
-	}
-	
-	// Opens a Carousel to allow the client to select a faction for their deck
-	selectFaction() {
-		let container = new CardContainer();
-		container.cards = Object.keys(factions).map( f => {
-			return {abilities: [f], filename: f, desc_name: factionName(f), desc: factionDesc(f), faction: "faction"};
-		});
-		let index = container.cards.reduce((a,c,i) => c.filename === this.faction ? i : a, 0);
-		ui.queueCarousel(container, 1, (c,i) => {
-			this.loadFactionDeck(c.cards[i].filename);
 		}, () => true, false, true);
 		Carousel.curr.index = index;
 		Carousel.curr.update();
@@ -3227,13 +3265,13 @@ class DeckMaker {
 		const buttons = ['op-preview-clear', 'op-preview-open'].map(id=>document.getElementById(id));
 		if (isEmpty(this.opponentData))
 		{
-			leaderElem.children[1].textContent = t("deck.random");
+			leaderElem.querySelector("p").textContent = t("deck.random");
 			[factionElem, ...buttons].forEach(e=>e.classList.add('hide'));
 		}
 		else
 		{
 			factionElem.style.setProperty('background-image', iconURL('deck_shield_' + this.opponentData.faction));
-			leaderElem.children[1].textContent = cardName(card_dict[this.opponentData.leader]);
+			leaderElem.querySelector("p").textContent = cardName(card_dict[this.opponentData.leader]);
 			[factionElem, ...buttons].forEach(e=>e.classList.remove('hide'));
 		}
 	}
