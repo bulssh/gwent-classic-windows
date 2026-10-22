@@ -2,6 +2,9 @@
 
 Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/gwent-classic).
 
+# Version 2.3.1
+- Adresse du serveur de mise en relation intégrée (https://gwent-classic-signal.xxx.workers.dev) : rien à saisir, il suffit d'installer cette version des deux côtés. Elle reste modifiable dans la fenêtre « Partie en ligne ».
+
 # Version 2.3
 
 ## Partie en ligne 1v1 (nouveau)

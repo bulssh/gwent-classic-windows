@@ -13,11 +13,11 @@
 // fingerprint of the board: a difference (it should never happen) is reported.
 // Loaded after net.js and options.js.
 
-const GAME_VERSION = "2.3.0";
+const GAME_VERSION = "2.3.1";
 const ONLINE_PROTOCOL = 1;
 // address of the matchmaking server (Cloudflare Worker, see gwent-signal/README.md); it can also be
 // set in the online screen
-const ONLINE_DEFAULT_SERVER = "";
+const ONLINE_DEFAULT_SERVER = "https://gwent-classic-signal.xxx.workers.dev";
 
 // Opponent played by the other computer: waits for its moves
 class ControllerRemote {
