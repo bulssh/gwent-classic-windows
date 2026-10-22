@@ -20,11 +20,14 @@ var factions = {
 	monsters: {
 		name: "Monsters",
 		factionAbility: player => game.roundEnd.push(() => {
-			const units = board.row.filter( (r,i) => player === player_me ^ i < 3)
+			let units = board.row.filter( (r,i) => player === player_me ^ i < 3)
 				.reduce((a,r) => r.cards.filter(c => c.isUnit()).concat(a), []);
 			if (units.length === 0)
 				return;
-			const card = units[randomInt(units.length)];
+			// online games: same choice on both computers (stable order, seeded draw)
+			if (Rng.seeded)
+				units = canonicalOrder(units);
+			const card = units[Math.floor(Rng.of(player)() * units.length)];
 			card.noRemove = true;
 			game.roundStart.push( async () => {
 				await ui.notification("monsters", 1200);
@@ -42,6 +45,15 @@ var factions = {
 			if (player === player_me) {
 				await ui.popup(t("scoia.first"), () => game.firstPlayer = player, t("scoia.opponent"), () => game.firstPlayer = player.opponent(), t("scoia.title"), t("scoia.text"), 0.55);
 				notif = game.firstPlayer.tag + "-first";
+				if (typeof Online !== "undefined" && Online.active)
+					Online.local("ScoiaFirst", {first: game.firstPlayer === player});
+			} else if (typeof Online !== "undefined" && Online.isRemote(player)) {
+				// online: the other player decides
+				const m = await Online.next("ScoiaFirst");
+				if (!m)
+					return true;
+				game.firstPlayer = m.first ? player : player.opponent();
+				notif = m.first ? "scoiatael" : game.firstPlayer.tag + "-first";
 			} else if (player.hand instanceof HandAI) {
 				if (Math.random() < 0.5) {
 					game.firstPlayer = player;
@@ -79,7 +91,7 @@ var factions = {
 			return true;
 		}),
 		helper: async player => {
-			const units = player.grave.findCardsRandom(c => c.isUnit(), 1);
+			const units = player.grave.findCardsRandom(c => c.isUnit(), 1, Rng.of(player));
 			if (units.length === 0)
 				return;
 			const card = units[0];

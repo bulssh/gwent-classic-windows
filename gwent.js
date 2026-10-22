@@ -579,7 +579,10 @@ class Player {
 	constructor(id, name, deck) {
 		this.id = id;
 		this.tag = (id === 0) ? "me" : "op";
-		this.controller = (id === 0) ? new Controller() : new ControllerAI(this);
+		// online game: "host" or "guest" (seeds of the random draws of this player's cards)
+		const online = typeof Online !== "undefined" && Online.active;
+		this.role = online ? Online.roleOf(id) : null;
+		this.controller = (id === 0) ? new Controller() : online ? new ControllerRemote(this) : new ControllerAI(this);
 		
 		this.hand = (id === 0) ? new Hand(document.getElementById("hand-row")) : new HandAI();
 		this.grave =  new Grave( document.getElementById("grave-" + this.tag));
@@ -662,7 +665,8 @@ class Player {
 			document.getElementById("pass-button").classList.remove("noclick");
 		}
 		
-		if (this.controller instanceof ControllerAI) {
+		// AI or the other player of an online game
+		if (this.controller.startTurn) {
 			await this.controller.startTurn(this);
 		}
 	}
@@ -730,6 +734,8 @@ class Player {
 	
 	// Use a leader's Activate ability, then disable the leader
 	async activateLeader() {
+		if (this === player_me && typeof Online !== "undefined")
+			Online.local("PlayLeader");
 		ui.showPreviewVisuals(this.leader);
 		await sleep(1500);
 		ui.hidePreview(this.leader);
@@ -797,15 +803,21 @@ class CardContainer {
 	}
 	
 	// Returns a list of up to n cards that satisfy the predicate. Does not modify container.
-	findCardsRandom(predicate, n){
-		let valid = predicate ? this.cards.filter(predicate) : this.cards;
+	// rng: generator of the player concerned (online games: the same draws on both computers, the
+	// cards being taken in a stable order); Math.random otherwise
+	findCardsRandom(predicate, n, rng){
+		// FIX: without a predicate the container's own list was spliced
+		let valid = predicate ? this.cards.filter(predicate) : this.cards.slice();
+		if (rng && Rng.seeded)
+			valid = canonicalOrder(valid);
+		const random = k => Math.floor((rng || Math.random)() * k);
 		if (valid.length === 0)
 			return [];
 		if (!n || n === 1)
-			return [valid[randomInt(valid.length)]];
+			return [valid[random(valid.length)]];
 		let out = [];
 		for (let i=Math.min(n, valid.length); i>0 ; --i){
-			let index = randomInt(valid.length);
+			let index = random(valid.length);
 			out.push( valid.splice(index,1)[0] );
 		}
 		return out;
@@ -840,8 +852,11 @@ class CardContainer {
 	
 	// Removes a card from the container along with its associated HTML element.
 	removeCard(card, index){
-		if (this.cards.length === 0)
-			throw "Cannot draw from empty " + this.constructor.name;
+		// FIX: a move still being animated when the game is left (reset) must not throw
+		if (this.cards.length === 0) {
+			console.warn("removeCard: empty " + this.constructor.name);
+			return undefined;
+		}
 		const i = isNumber(card) ? card : this.cards.indexOf(card);
 		// FIX: indexOf() === -1 made splice() remove the last card of the container
 		if (i < 0 || i >= this.cards.length) {
@@ -872,7 +887,7 @@ class CardContainer {
 	// Adds a card to a random index of the CardContainer
 	addCardRandom(card){
 		this.cards.push(card);
-		let index = randomInt(this.cards.length);
+		let index = Math.floor(Rng.of(this.owner)() * this.cards.length);
 		if (index !== this.cards.length-1) {
 			let t = this.cards[this.cards.length-1];
 			this.cards[this.cards.length-1] = this.cards[index];
@@ -1012,6 +1027,7 @@ class Deck extends CardContainer {
 	
 	// Populates a this deck with a list of card data and associated those cards with the owner of this deck.
 	initialize(card_data_list, player){
+		this.owner = player;
 		for (let i=0; i<card_data_list.length; ++i) {
 			let card = new Card(card_data_list[i], player);
 			this.addCardRandom(card);
@@ -1022,11 +1038,25 @@ class Deck extends CardContainer {
 	
 	// Override
 	addCard(card){
+		if (!card)
+			return;
 		this.addCardRandom(card);
 		this.addCardElement();
 		this.resize();
 	}
 	
+	// Shuffles the whole deck again with its owner's generator, from a stable order (online games:
+	// after cards were put back in a different order on the two computers)
+	reshuffle(){
+		const rng = Rng.of(this.owner);
+		const cards = canonicalOrder(this.cards);
+		for (let i = cards.length - 1; i > 0; i--) {
+			const j = Math.floor(rng() * (i + 1));
+			[cards[i], cards[j]] = [cards[j], cards[i]];
+		}
+		this.cards = cards;
+	}
+
 	// Sends the top card to the passed hand
 	async draw(hand){
 		// FIX: nothing to draw (Northern Realms bonus, Eredin Destroyer...) instead of an exception
@@ -1673,7 +1703,11 @@ class Game {
 	// Sets initializes player abilities, player hands and redraw
 	async startGame() {
 		EventManager.gameOpened.dispatch();
-		this.initPlayers(player_me, player_op);
+		// online game: the same order on both computers (the host first)
+		if (typeof Online !== "undefined" && Online.active)
+			this.initPlayers(...Online.ordered());
+		else
+			this.initPlayers(player_me, player_op);
 		this.setState(GameState.PLAYING);
 		AudioManager.playSFX('game_opening');
 		await this.runEffects(this.gameStart);
@@ -1693,12 +1727,15 @@ class Game {
 	async coinToss(){
 		if (this.firstPlayer)
 			return;
-		this.firstPlayer = (Math.random() < 0.5) ? player_me : player_op;
+		const [first, second] = (typeof Online !== "undefined" && Online.active) ? Online.ordered() : [player_me, player_op];
+		this.firstPlayer = (Rng.game() < 0.5) ? first : second;
 		await ui.notification(this.firstPlayer.tag + "-coin", 1200);
 	}
 	
 	// Allows the player to swap out up to two cards from their iniitial hand
 	async initialRedraw(){
+		if (typeof Online !== "undefined" && Online.active)
+			return this.onlineRedraw();
 		for (let i=0; i< 2; i++)
 			player_op.controller.redraw();
 		await ui.queueCarousel(player_me.hand, 2, async (c, i) => { 
@@ -1709,6 +1746,31 @@ class Game {
 		ui.enablePlayer(false);
 	}
 	
+	// Online game: each player redraws on his computer, then both apply the other's choice
+	async onlineRedraw(){
+		const theirs = Online.next("Redraw");
+		const swapped = [];
+		await ui.queueCarousel(player_me.hand, 2, async (c, i) => {
+			swapped.push(Online.cardDesc(c.cards[i]));
+			AudioManager.playSFX('redraw');
+			await player_me.deck.swap(c, c.cards[i]);
+		}, c => true, false, true, t("redraw"));
+		player_me.hand.sort();
+		Online.local("Redraw", {cards: swapped});
+		ui.enablePlayer(false);
+		const gen = this.generation;
+		const m = await theirs;
+		if (!m || gen !== this.generation)
+			return;
+		for (const desc of m.cards) {
+			const card = Online.findCard(player_op.hand, desc);
+			if (card)
+				player_op.deck.swap(player_op.hand, card);
+			else
+				Online.desync("redraw " + JSON.stringify(desc));
+		}
+	}
+
 	// Initiates a new round of the game
 	async startRound(){
 		this.firstPlayer = this.currPlayer;
@@ -1859,13 +1921,24 @@ class Game {
 		ui.enablePlayer(true);
 		this.setState(GameState.END_SCREEN);
 		if (typeof History !== "undefined")
-			History.record(player_op.health <= 0 && player_me.health <= 0 ? "draw" : player_op.health === 0 ? "win" : "lose");
+			History.record(player_op.health <= 0 && player_me.health <= 0 ? "draw" : player_op.health === 0 ? "win" : "lose",
+				typeof Online !== "undefined" && Online.active ? Online.extraHistory() : undefined);
+		if (typeof Online !== "undefined" && Online.active)
+			Online.endGame();
 	}
 
 	exitGame()
 	{
 		const wasEnabled = !document.getElementsByTagName("main")[0].classList.contains("noclick");
 		AudioManager.playSFX('warning');
+		// online game: leaving means giving the game up
+		if (typeof Online !== "undefined" && Online.active) {
+			ui.popup(t("exit.resume"), () => ui.enablePlayer(wasEnabled), t("online.forfeit"), () => Online.forfeit(),
+				t("online.forfeitTitle"), t("online.forfeitText"));
+			if (Popup.curr)
+				Popup.curr.escapeIsYes = true;
+			return;
+		}
 		ui.popup(
 			// FIX: "Resume" must give control back (the board stayed unclickable)
 			t("exit.resume"), ()=>ui.enablePlayer(wasEnabled),
@@ -1878,6 +1951,9 @@ class Game {
 	
 	// Returns the client to the deck customization screen
 	returnToCustomization(){
+		// online: back to the room
+		if (typeof Online !== "undefined" && document.getElementById("end-screen").classList.contains("online"))
+			return Online.backToRoom();
 		if (this.state === GameState.PLAYING && typeof History !== "undefined")
 			History.record("abandon");
 		ui.enablePlayer(false);
@@ -2185,6 +2261,8 @@ class UI {
 			return false;
 		if (this.previewCard)
 			this.cancel();
+		if (typeof Online !== "undefined")
+			Online.local("Pass");
 		player_me.passRound();
 		AudioManager.playSFX('pass');
 		return true;
@@ -2221,6 +2299,8 @@ class UI {
 			this.setSelectable(null, false);
 			this.showPreview(card);
 		} else if (pCard.name === "Decoy") {
+			if (typeof Online !== "undefined")
+				Online.local("PlayCard", {card: Online.cardDesc(pCard), row: Online.rowDesc(row, player_me), target: Online.cardDesc(card)});
 			FX.launchFromPreview(pCard);
 			this.hidePreview(card);
 			this.enablePlayer(false);
@@ -2246,6 +2326,8 @@ class UI {
 			return;
 		let card = this.previewCard;
 		let holder = card.holder;
+		if (typeof Online !== "undefined")
+			Online.local("PlayCard", card.name === "Scorch" ? {card: Online.cardDesc(card)} : {card: Online.cardDesc(card), row: Online.rowDesc(row, player_me)});
 		if (card.name !== "Scorch")
 			FX.launchFromPreview(card);
 		this.hidePreview();
@@ -2377,7 +2459,30 @@ class UI {
 						break;
 					await action(container, cards[randomInt(cards.length)]);
 				}
+			// online: the cards chosen by the other player (a carousel that can be closed only shows cards)
+			else if (typeof Online !== "undefined" && Online.isRemote(player_op) && !bQuit)
+				for (let i=0; i<count; ++i){
+					if (!container.cards.some(c => !predicate || predicate(c)))
+						break;
+					const m = await Online.next("Choice");
+					if (!m)
+						return;
+					const card = Online.findCard(container, m.card, predicate);
+					if (!card) {
+						Online.desync("choice " + JSON.stringify(m.card));
+						break;
+					}
+					await action(container, container.cards.indexOf(card));
+				}
 			return;
+		}
+		// online: a choice of the local player is sent to the other computer
+		if (typeof Online !== "undefined" && Online.active && !bQuit && game.currPlayer === player_me) {
+			const chosen = action;
+			action = async (c, i) => {
+				Online.local("Choice", {card: Online.cardDesc(c.cards[i])});
+				return await chosen(c, i);
+			};
 		}
 		let carousel = new Carousel(container, count, action, predicate, bSort, bQuit, title);
 		if (Carousel.curr === undefined || Carousel.curr === null)
@@ -2498,6 +2603,19 @@ class UI {
 
 	// used to handle row selection when resetoring agile units via medics
 	async waitForRowSelection(card)
+	{
+		// online: the row chosen by the other player for his card
+		if (typeof Online !== "undefined" && Online.isRemote(card.holder)) {
+			const m = await Online.next("RowChoice");
+			return m && m.row ? Online.rowFrom(m.row, card.holder) : null;
+		}
+		const selected = await this.waitForLocalRowSelection(card);
+		if (typeof Online !== "undefined" && Online.active)
+			Online.local("RowChoice", {row: selected ? Online.rowDesc(selected, player_me) : null});
+		return selected;
+	}
+
+	async waitForLocalRowSelection(card)
 	{
 		game.placedEffectsActive = true;
 		ui.setSelectable(null, false);
@@ -3136,6 +3254,11 @@ class DeckMaker {
 	
 	// Verifies current deck, creates the players and their decks, then starts a new game
 	startNewGame(){
+		// in an online room, games are started from the room
+		if (typeof Online !== "undefined" && Online.inRoom) {
+			Online.open();
+			return;
+		}
 		let warning = [];
 		if (this.stats.units < 22)
 			warning.push(t("deck.warnUnits"));
@@ -3681,7 +3804,7 @@ async function translateTo(card, container_source, container_dest){
 	if (container_dest instanceof Row && container_dest.cards.length !== 0 && !card.isSpecial() ){
 		x += (container_dest.getSortedIndex(card) === container_dest.cards.length) ? elem.offsetWidth/2 : -elem.offsetWidth/2;
 	}
-	if (card.holder.controller instanceof ControllerAI)
+	if (card.holder === player_op)
 		x += elem.offsetWidth/2;
 	if (container_source instanceof Row && container_dest instanceof Grave && !card.isSpecial()) {
 		let mid = trueOffset(container_source.elem, true) + container_source.elem.offsetWidth/2;

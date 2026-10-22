@@ -75,7 +75,11 @@ const Options = (() => {
 	function showPortrait(player) {
 		if (!player)
 			return;
-		const p = player.tag === "me" ? character() : leaderPortrait(player.deck_data.leader);
+		// online: the character chosen by the other player, with his name
+		const online = player.tag === "op" && typeof Online !== "undefined" && Online.active;
+		const p = player.tag === "me" ? (typeof Online !== "undefined" && Online.active ? Object.assign(character(), {name: Online.myName}) : character())
+			: online ? {name: Online.peerName || player.name, img: portraitURL(CHARACTERS.some(c => c[0] === Online.peerCharacter) ? Online.peerCharacter : "geralt")}
+			: leaderPortrait(player.deck_data.leader);
 		player.name = p.name;
 		document.getElementById("name-" + player.tag).textContent = p.name;
 		const img = document.querySelector("#stats-" + player.tag + " .profile-img");

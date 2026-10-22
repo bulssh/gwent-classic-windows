@@ -167,7 +167,7 @@ var ability_dict = {
 				return;
 			let wrapper = {card : null};
 			if (game.randomRespawn) {
-				const cards = grave.findCardsRandom(c => c.isUnit());
+				const cards = grave.findCardsRandom(c => c.isUnit(), 1, Rng.of(card.holder));
 				if (cards.length > 0)
 					wrapper.card = cards[0];
 			} else if (card.holder.controller instanceof ControllerAI)
@@ -314,11 +314,12 @@ var ability_dict = {
 	emhyr_emperor: {
 		description: "Look at 3 random cards from your opponent's hand.",
 		activated: async card => {
-			if (card.holder.controller instanceof ControllerAI)
+			// only shown to the player who uses it (AI or other player of an online game: nothing to show)
+			if (card.holder !== player_me)
 				return;
 			let container = new CardContainer();
 			container.cards = card.holder.opponent().hand.findCardsRandom(() => true, 3);
-			Carousel.curr.cancel();
+			Carousel.curr?.cancel();
 			await ui.viewCardsInContainer(container, undefined, t("carousel.opponentHand"));
 		},
 		weight: card => {
@@ -341,7 +342,7 @@ var ability_dict = {
 				await board.toHand(newCard, grave);
 				return;
 			}
-			Carousel.curr.cancel();
+			Carousel.curr?.cancel();
 			await ui.queueCarousel(grave, 1, async (c,i) => {
 				let newCard = c.cards[i];
 				newCard.holder = card.holder;
@@ -367,7 +368,7 @@ var ability_dict = {
 			if (card.holder.controller instanceof ControllerAI) {
 				newCard = card.holder.controller.medic(card, card.holder.grave)
 			} else {
-				Carousel.curr.exit();
+				Carousel.curr?.exit();
 				await ui.queueCarousel(card.holder.grave, 1, (c,i) => newCard = c.cards[i], c => c.isUnit(), false, false);
 			}
 			if (newCard)
@@ -386,7 +387,7 @@ var ability_dict = {
 				await card.holder.deck.draw(card.holder.hand);
 				return;
 			} else
-				Carousel.curr.exit();
+				Carousel.curr?.exit();
 			await ui.queueCarousel(hand, 2, (c,i) => board.toGrave(c.cards[i], c), () => true, false, false, t("carousel.discard"));
 			await ui.queueCarousel(deck, 1, (c,i) => board.toHand(c.cards[i], deck), () => true, true, false, t("carousel.draw"));
 		},
@@ -407,7 +408,7 @@ var ability_dict = {
 				if (best)
 					await best.autoplay(card.holder.deck);
 			} else {
-				Carousel.curr.cancel();
+				Carousel.curr?.cancel();
 				await ui.queueCarousel(deck, 1, (c,i) => board.toWeather(c.cards[i], deck), c => c.faction === "weather", true);
 			}
 		},
@@ -521,6 +522,11 @@ var ability_dict = {
 				...card.holder.grave.cards.map(c => board.toDeck(c, card.holder.grave)),
 				...card.holder.opponent().grave.cards.map(c => board.toDeck(c, card.holder.opponent().grave))
 			]);
+			// online: the same deck order on both computers whatever the order of the animations
+			if (Rng.seeded) {
+				card.holder.deck.reshuffle();
+				card.holder.opponent().deck.reshuffle();
+			}
 		},
 		weight: (card, ai, max, data) => {
 			if( game.roundCount < 2)

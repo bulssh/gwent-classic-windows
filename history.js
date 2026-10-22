@@ -28,7 +28,7 @@ const History = (() => {
 
 	// Called at the end of a game (result "win", "lose", "draw") or when the player leaves a game
 	// in progress ("abandon")
-	function record(result) {
+	function record(result, extra) {
 		try {
 			if (typeof player_me === "undefined" || !player_me || !player_op)
 				return;
@@ -45,6 +45,8 @@ const History = (() => {
 				op: side(player_op),
 				rounds: game.roundHistory.map(r => [r.score_me, r.score_op]),
 			};
+			if (extra)
+				Object.assign(entry, extra);
 			const list = load();
 			list.push(entry);
 			save(list);
@@ -89,7 +91,7 @@ const History = (() => {
 	});
 
 	const FACTIONS = ["realms", "nilfgaard", "monsters", "scoiatael", "skellige"];
-	const resultText = r => r === "abandon" ? t("history.abandon") : t("history." + r).replace(/\s*!$/, "");
+	const resultText = r => r === "abandon" ? t("history.abandon") : r === "interrupted" ? t("history.interrupted") : t("history." + r).replace(/\s*!$/, "");
 
 	function leaderName(faction, name) {
 		const card = card_dict.find(c => c.row === "leader" && c.deck === faction && c.name === name);
@@ -117,7 +119,8 @@ const History = (() => {
 		const list = load();
 		const count = r => list.filter(g => g.result === r).length;
 		const wins = count("win"), losses = count("lose") + count("abandon"), draws = count("draw");
-		const rate = list.length ? Math.round(wins * 100 / list.length) : 0;
+		const played = list.length - count("interrupted");
+		const rate = played ? Math.round(wins * 100 / played) : 0;
 		$(".hist-summary").innerHTML = "";
 		for (const [label, value, cls] of [
 			[t("history.games"), list.length, ""],
@@ -142,7 +145,7 @@ const History = (() => {
 			d.title = t("history.factionTip", factionName(f));
 			d.innerHTML = '<span class="hist-shield"></span><span></span>';
 			d.children[0].style.backgroundImage = iconURL("deck_shield_" + f);
-			d.children[1].textContent = games.filter(g => g.result === "win").length + " – " + games.filter(g => g.result !== "win" && g.result !== "draw").length;
+			d.children[1].textContent = games.filter(g => g.result === "win").length + " – " + games.filter(g => g.result === "lose" || g.result === "abandon").length;
 			$(".hist-factions").appendChild(d);
 		}
 
@@ -166,7 +169,15 @@ const History = (() => {
 			}
 			const diff = document.createElement("td");
 			diff.textContent = t("difficulty." + g.difficulty);
-			tr.append(date, res, sideCell(g.me), sideCell(g.op), rounds, diff);
+			const op = sideCell(g.op);
+			if (g.online) {
+				const tag = document.createElement("span");
+				tag.className = "hist-online";
+				tag.textContent = t("history.online", g.opName || "?");
+				op.firstChild.appendChild(tag);
+				diff.textContent = t("history.onlineMode");
+			}
+			tr.append(date, res, sideCell(g.me), op, rounds, diff);
 			body.appendChild(tr);
 		}
 		$(".hist-empty").classList.toggle("hide", list.length > 0);

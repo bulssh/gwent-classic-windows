@@ -2,6 +2,21 @@
 
 Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/gwent-classic).
 
+# Version 2.3
+
+## Partie en ligne 1v1 (nouveau)
+- Icône globe en haut à droite du menu du deck : « Créer une partie » (code de 6 caractères à copier et donner à l'adversaire) ou « Rejoindre une partie » (saisir le code).
+- Salon : les deux joueurs apparaissent avec leur nom et leur portrait, choisissent leur deck dans une liste (decks incomplets grisés) et se déclarent « Prêt » ; l'hôte lance la partie quand les deux sont prêts, et les deux plateaux s'ouvrent.
+- Connexion directe d'un PC à l'autre (WebRTC). Si elle est impossible (pare-feu, 4G, CGNAT), la partie passe automatiquement par le serveur de mise en relation, et revient en direct dès que possible : aucun port à ouvrir.
+- Serveur de mise en relation gratuit à déployer une fois sur un compte Cloudflare (offre gratuite) : dossier gwent-signal, guide README-FR.md.
+- En partie : nom et portrait de l'adversaire, Échap pour abandonner ; fin de partie « Retour au salon » pour enchaîner ; historique des parties avec le nom de l'adversaire, les abandons et les connexions perdues.
+- Les deux jeux restent identiques (mêmes tirages aléatoires, mêmes décisions, contrôle du plateau à chaque coup).
+
+## Divers
+- Croix en haut à droite : infobulle « Quitter ».
+- Les infobulles des icônes ne tournent plus avec l'icône (historique, paramètres).
+- Quitter une partie pendant l'animation d'un coup ne provoque plus d'erreur.
+
 # Version 2.2
 
 ## Plateau

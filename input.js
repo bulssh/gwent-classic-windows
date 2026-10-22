@@ -244,11 +244,12 @@ const Input = (() => {
 			}
 			return;
 		}
-		if (Options.isOpen() || History.isOpen()) {
+		if (Options.isOpen() || History.isOpen() || Online.isOpen()) {
 			if (key === "Escape") {
 				e.preventDefault();
 				Options.close();
 				History.close();
+				Online.close();
 			}
 			return;
 		}
