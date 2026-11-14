@@ -13,7 +13,7 @@
 // fingerprint of the board: a difference (it should never happen) is reported.
 // Loaded after net.js and options.js.
 
-const GAME_VERSION = "2.3.1";
+const GAME_VERSION = "2.3.2";
 const ONLINE_PROTOCOL = 1;
 // address of the matchmaking server (Cloudflare Worker, see gwent-signal/README.md); it can also be
 // set in the online screen
@@ -241,11 +241,11 @@ const Online = (() => {
 		switch (m.type) {
 			case "PlayerJoined":
 				if (m.protocol !== ONLINE_PROTOCOL || m.cards !== CARDS_ID) {
-					ui.message(t("online.versionMismatch", m.app || "?", GAME_VERSION), t("online.title"));
+					ui.message(t("online.versionMismatch", String(m.app || "?").replace(/[^\w.+-]/g, "").slice(0, 16) || "?", GAME_VERSION), t("online.title"));
 					leave(true);
 					return;
 				}
-				peer = Object.assign(peer || {}, {name: cleanName(m.name), character: m.character, app: m.app, ready: false});
+				peer = Object.assign(peer || {}, {name: cleanName(m.name), character: typeof m.character === "string" ? m.character.slice(0, 40) : null, app: String(m.app || "").slice(0, 16), ready: false});
 				AudioManager.playSFX("ui_card_bank");
 				break;
 			case "SelectDeck": {
@@ -494,7 +494,7 @@ const Online = (() => {
 			return;
 		History.record(reason === "forfeit" ? "win" : "interrupted", extraHistory());
 		endGame();
-		await ui.message(t("online.opponent." + reason), t("online.title"));
+		await ui.message(t("online.opponent." + (["forfeit", "connection", "left"].includes(reason) ? reason : "connection")), t("online.title"));
 		backToRoom();
 	}
 
@@ -700,7 +700,7 @@ const Online = (() => {
 			const label = document.createElement("label");
 			label.textContent = t("online.deck");
 			deckBox.append(label, select);
-		} else if (info.deck) {
+		} else if (info.deck && Object.prototype.hasOwnProperty.call(factions, info.deck.faction)) {
 			const s = deckSummary(info.deck);
 			deckBox.innerHTML = `<label></label><div class="on-deck-summary"><span class="hist-shield"></span><span></span></div>`;
 			deckBox.querySelector("label").textContent = t("online.deck");

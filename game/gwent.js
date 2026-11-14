@@ -2836,6 +2836,15 @@ class Carousel {
 	}
 }
 
+// Text shown as HTML in popups: everything is escaped except line breaks and bold text,
+// so that a string coming from the network or from an imported file can never inject markup
+function safeHTML(text) {
+	return String(text ?? "")
+		.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;")
+		.replace(/&lt;br\s*\/?&gt;/gi, "<br>")
+		.replace(/&lt;(\/?)b&gt;/gi, "<$1b>");
+}
+
 // Custom confirmation windows
 class Popup {
 	constructor(yesName, yes, noName, no, header, description, alpha = .95){
@@ -2844,8 +2853,8 @@ class Popup {
 		
 		this.elem = document.getElementById("popup");
 		let main = this.elem.children[0];
-		main.children[0].innerHTML = header ? header : "";
-		main.children[1].innerHTML = description ? description : "";
+		main.children[0].innerHTML = safeHTML(header);
+		main.children[1].innerHTML = safeHTML(description);
 		main.children[2].children[0].textContent = (yesName) ? yesName : t("popup.yes");
 		main.children[2].children[1].textContent = (noName) ? noName : t("popup.no");
 		// a popup without "no" label shows a single button (messages)
@@ -3318,15 +3327,10 @@ class DeckMaker {
 	async downloadDeck(){
 		let json = this.deckToJSON();
 		const tauri = window.__TAURI__;
-		if (tauri?.dialog?.save && tauri?.core?.invoke) {
+		if (tauri?.core?.invoke) {
 			try {
-				const path = await tauri.dialog.save({
-					title: t("deck.saveTitle"),
-					defaultPath: "GwentDeck-" + this.faction + ".json",
-					filters: [{name: "Deck Gwent", extensions: ["json"]}]
-				});
-				if (path)
-					await tauri.core.invoke("write_text_file", {path: path, contents: json});
+				// the native dialog is opened by the application itself, which only writes to the file chosen there
+				await tauri.core.invoke("save_deck", {title: t("deck.saveTitle"), fileName: "GwentDeck-" + this.faction + ".json", contents: json});
 			} catch (e) {
 				ui.message(String(e));
 			}

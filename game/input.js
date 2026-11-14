@@ -292,3 +292,21 @@ const Input = (() => {
 
 	return {openZoom, closeZoom, zoomOpen, cardAt, toggleFullscreen};
 })();
+
+// Carousel and popup buttons (event listeners rather than inline handlers, which the content security policy forbids)
+document.querySelectorAll("#carousel > div:first-child > .card-lg").forEach((elem, i) => {
+	const offset = i - 2;
+	elem.addEventListener("click", e => {
+		if (!Carousel.curr)
+			return;
+		if (offset === 0)
+			Carousel.curr.select(e);
+		else
+			Carousel.curr.shift(e, offset);
+	});
+	elem.addEventListener("mouseover", () => Carousel.curr?.nudge(offset));
+});
+document.querySelectorAll("#popup > div > div > button").forEach((button, i) => button.addEventListener("click", () => {
+	if (Popup.curr)
+		i === 0 ? Popup.curr.selectYes() : Popup.curr.selectNo();
+}));
