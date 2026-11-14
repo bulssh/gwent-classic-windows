@@ -1,0 +1,17 @@
+# Gwent Classic - matchmaking server (Cloudflare Workers Free plan)
+name = "gwent-classic-signal"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"
+
+# Durable Objects on the Free plan must use the SQLite storage backend
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room"]
+
+[observability]
+enabled = false

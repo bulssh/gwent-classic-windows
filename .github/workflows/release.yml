@@ -1,0 +1,89 @@
+name: Release
+
+# Publie une version : pousser un tag vX.Y.Z (identique à la version de desktop/src-tauri/tauri.conf.json).
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Installateur Windows
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write      # créer la release
+      id-token: write      # signer l'attestation de provenance
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Vérifier la version
+        id: version
+        shell: pwsh
+        run: |
+          $conf = Get-Content desktop/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
+          $tag = "${{ github.ref_name }}".TrimStart("v")
+          if ($conf.version -ne $tag) { throw "Le tag v$tag ne correspond pas à la version $($conf.version) de tauri.conf.json" }
+          "version=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Compiler (Rust, MSVC)
+        working-directory: desktop/src-tauri
+        run: cargo build --release --locked
+
+      - name: NSIS
+        shell: pwsh
+        run: |
+          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+            if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
+            "${env:ProgramFiles(x86)}\NSIS" >> $env:GITHUB_PATH
+          }
+
+      - name: Installateur
+        shell: pwsh
+        run: |
+          python desktop/installer/make_nsi.py ${{ steps.version.outputs.version }} src-tauri/target/release
+          makensis -V2 desktop/installer/installer.nsi
+          Get-ChildItem desktop/dist
+
+      - name: Empreintes SHA-256
+        shell: bash
+        run: |
+          cd desktop/dist
+          sha256sum *.exe > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Attestation de provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: desktop/dist/*.exe
+
+      - name: Notes de version
+        shell: bash
+        run: |
+          python - "${{ steps.version.outputs.version }}" > notes.md <<'PY'
+          import sys, re
+          version = sys.argv[1]
+          text = open("CHANGELOG.md", encoding="utf-8").read()
+          m = re.search(r"^# Version " + re.escape(version) + r".*?$(.*?)(?=^# Version |\Z)", text, re.S | re.M)
+          print(m.group(1).strip() if m else "Voir CHANGELOG.md.")
+          print()
+          print("---")
+          print("Vérifier le fichier : `gh attestation verify Gwent-Classic-%s-Setup.exe --repo ${GITHUB_REPOSITORY}`, ou comparer `Get-FileHash` avec SHA256SUMS.txt." % version)
+          PY
+          sed -i "s|\${GITHUB_REPOSITORY}|$GITHUB_REPOSITORY|" notes.md
+
+      - name: Publier la release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" desktop/dist/*.exe desktop/dist/SHA256SUMS.txt \
+            --title "Gwent Classic ${{ steps.version.outputs.version }}" --notes-file notes.md --verify-tag

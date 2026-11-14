@@ -2,6 +2,20 @@
 
 Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/gwent-classic).
 
+# Version 2.3.2 — sécurité et publication
+**Mise à jour recommandée pour tous les joueurs du mode en ligne.**
+
+## Sécurité
+- Corrigé : un message réseau trafiqué par l'adversaire (numéro de version) pouvait insérer du code dans la page de jeu. Tous les textes affichés dans les fenêtres de message sont désormais neutralisés.
+- Politique de sécurité du contenu (CSP) : la page de jeu n'exécute plus que ses propres scripts ; aucun code injecté ne peut s'exécuter.
+- Export de deck : la boîte « Enregistrer sous » est ouverte par l'application elle-même, qui n'écrit que dans le fichier choisi (la page ne peut plus demander d'écrire ailleurs).
+- Contrôles supplémentaires sur les données reçues de l'adversaire (portrait, faction du deck, motif de déconnexion).
+
+## Publication
+- Projet publié sur GitHub (un seul dépôt : jeu, application Windows, serveur, outils, tests).
+- Installateur compilé par GitHub Actions, avec empreintes SHA-256 et attestation de provenance.
+- Identifiant de l'application : `io.github.bulssh.gwentclassic`. Les decks, réglages, historique et musique des versions précédentes sont repris automatiquement au premier lancement.
+
 # Version 2.3.1
 - Adresse du serveur de mise en relation intégrée (https://gwent-classic-signal.xxx.workers.dev) : rien à saisir, il suffit d'installer cette version des deux côtés. Elle reste modifiable dans la fenêtre « Partie en ligne ».
 

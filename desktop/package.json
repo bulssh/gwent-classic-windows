@@ -1,0 +1,7 @@
+{
+  "name": "gwent-classic-tauri",
+  "private": true,
+  "version": "2.3.2",
+  "scripts": { "tauri": "tauri" },
+  "devDependencies": { "@tauri-apps/cli": "^2" }
+}

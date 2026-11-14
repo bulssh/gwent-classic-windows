@@ -1,0 +1,14 @@
+{
+  "name": "gwent-classic-signal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Serveur de mise en relation du mode en ligne de Gwent Classic (Cloudflare Worker, offre gratuite)",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "login": "wrangler login"
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.3"
+  }
+}

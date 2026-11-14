@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  game:
+    name: Jeu et mode en ligne (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Syntaxe JavaScript
+        run: for f in game/*.js server/src/*.js; do node --check "$f"; done
+      - name: Installer Playwright
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+      - name: Règles et cas limites
+        run: python tests/targeted.py game
+      - name: Interface (vrais clics)
+        run: python tests/realclick.py game
+      - name: Sécurité
+        run: python tests/security.py game
+      - name: Serveur local (wrangler dev)
+        working-directory: server
+        run: |
+          npm ci
+          npx wrangler dev --port 8787 > ../wrangler.log 2>&1 &
+          for i in $(seq 60); do curl -sf http://127.0.0.1:8787/health && exit 0; sleep 1; done
+          cat ../wrangler.log; exit 1
+      - name: Salon en ligne
+        run: python server/test/room_flow.py
+      - name: Parties en ligne à deux joueurs
+        run: python server/test/two_clients.py 2
+
+  desktop:
+    name: Application Windows (compilation)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: desktop/src-tauri
+      - name: cargo build (debug)
+        working-directory: desktop/src-tauri
+        run: cargo build --locked

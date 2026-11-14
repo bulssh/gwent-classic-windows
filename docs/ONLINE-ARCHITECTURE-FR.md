@@ -22,7 +22,7 @@
 
 Rien côté Rust : WebView2 (le moteur Chromium d'Edge) sait déjà faire WebRTC et WebSocket.
 
-## Serveur (gwent-signal/)
+## Serveur (server/)
 
 - `src/index.js` : `GET /room/<CODE>?role=host|guest` (WebSocket). Le Durable Object `Room` :
   - refuse un second hôte (`code-in-use`), un invité sans hôte (`no-room`), un troisième joueur (`room-full`) ;
