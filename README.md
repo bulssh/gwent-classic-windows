@@ -8,13 +8,36 @@ Ce projet part de [**Gwent Classic** d'Arun Sundaram (asundr)](https://github.co
 
 ## Aperçu du jeu
 
-| Partie | Lobby |
-| --- | --- |
-| ![Écran de partie](docs/screenshots/Gameplay.png) | ![Lobby](docs/screenshots/Lobby.png) |
-| Historique | Paramètres |
-| ![Historique](docs/screenshots/History.png) | ![Paramètres](docs/screenshots/Settings.png) |
+<p align="center">
+  <a href="docs/screenshots/Gameplay.png">
+    <img src="docs/screenshots/Gameplay.png" alt="Aperçu d'une partie de Gwent Classic" width="100%">
+  </a>
+  <br>
+  <strong>Une partie de Gwynt — interface fidèle à The Witcher 3</strong>
+</p>
 
-![Partie multijoueur](docs/screenshots/Multiplayer.png)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="docs/screenshots/Lobby.png"><img src="docs/screenshots/Lobby.png" alt="Salon du jeu" width="100%"></a><br>
+      <strong>Salon</strong><br><sub>Préparez votre prochaine partie</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="docs/screenshots/History.png"><img src="docs/screenshots/History.png" alt="Historique des parties" width="100%"></a><br>
+      <strong>Historique</strong><br><sub>Retrouvez vos parties et statistiques</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="docs/screenshots/Settings.png"><img src="docs/screenshots/Settings.png" alt="Paramètres du jeu" width="100%"></a><br>
+      <strong>Paramètres</strong><br><sub>Personnalisez votre expérience</sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="docs/screenshots/Multiplayer.png"><img src="docs/screenshots/Multiplayer.png" alt="Partie multijoueur" width="100%"></a><br>
+      <strong>Multijoueur</strong><br><sub>Jouez en ligne avec un ami</sub>
+    </td>
+  </tr>
+</table>
 
 ## Télécharger
 
