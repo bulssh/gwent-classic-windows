@@ -64,7 +64,8 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
-            if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { throw "NSIS absent de l image du runner" }
+            # NSIS n'est plus fourni par l'image Windows de GitHub : version figée, paquet Chocolatey vérifié par somme de contrôle
+            if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis --version=3.11 -y --no-progress; if ($LASTEXITCODE) { throw "installation de NSIS impossible" } }
             "${env:ProgramFiles(x86)}\NSIS" >> $env:GITHUB_PATH
           }
 
