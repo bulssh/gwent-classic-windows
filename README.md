@@ -20,7 +20,7 @@ L'installation se fait pour l'utilisateur courant, sans droits administrateur. L
 L'installateur n'est pas signé par un certificat commercial : au premier lancement, Windows peut afficher « Windows a protégé votre ordinateur ». Pour continuer, cliquez sur **Informations complémentaires**, puis sur **Exécuter quand même**. Avant cela, vous pouvez vérifier que le fichier est bien celui compilé par GitHub (voir ci-dessous).
 
 ### Vérifier le fichier téléchargé
-Chaque installateur est compilé par [GitHub Actions](.github/workflows/release.yml) à partir du code de ce dépôt, et reçoit une **attestation de provenance** signée.
+Chaque installateur est compilé automatiquement par [GitHub Actions](.github/workflows/release.yml) à partir du code de ce dépôt (dès que la version change sur `main`), et reçoit une **attestation de provenance** signée.
 
 - **Empreinte SHA-256** (PowerShell) : `Get-FileHash .\Gwent-Classic-2.3.2-Setup.exe`. Le résultat doit être identique à la ligne correspondante de `SHA256SUMS.txt`.
 - **Provenance** (avec [GitHub CLI](https://cli.github.com/)) : `gh attestation verify .\Gwent-Classic-2.3.2-Setup.exe --repo bulssh/gwent-classic-windows`
