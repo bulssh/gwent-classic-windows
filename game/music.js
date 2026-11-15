@@ -240,7 +240,7 @@ const Music = (() => {
 			if (!root)
 				root = await invoke("tw3_find");
 			if (!root) {
-				root = await window.__TAURI__.dialog.open({directory: true, title: t("music.pickFolder")});
+				root = await invoke("tw3_pick_folder", {title: t("music.pickFolder")});
 				if (!root)
 					return false;
 			}
@@ -275,17 +275,12 @@ const Music = (() => {
 	async function importFiles() {
 		if (!desktop || busy)
 			return;
-		const picked = await window.__TAURI__.dialog.open({
-			multiple: true,
-			title: t("music.importTitle"),
-			filters: [{name: t("music.audioFiles"), extensions: ["ogg", "oga", "opus", "mp3", "flac", "wav", "m4a"]}]
-		});
-		const paths = Array.isArray(picked) ? picked : picked ? [picked] : [];
-		if (!paths.length)
-			return;
 		busy = true;
 		try {
-			await invoke("music_import", {paths});
+			// the application opens the file dialog itself and only copies the files picked there
+			const names = await invoke("music_import", {title: t("music.importTitle"), filterName: t("music.audioFiles")});
+			if (!names.length)
+				return;
 			await refreshLocal();
 		} catch (e) {
 			await ui.message(t("music.error", String(e)), t("music.title"));

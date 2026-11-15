@@ -9,6 +9,6 @@
     "login": "wrangler login"
   },
   "devDependencies": {
-    "wrangler": "^4.151.3"
+    "wrangler": "^4.162.0"
   }
 }

@@ -9,7 +9,14 @@ Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/g
 - Corrigé : un message réseau trafiqué par l'adversaire (numéro de version) pouvait insérer du code dans la page de jeu. Tous les textes affichés dans les fenêtres de message sont désormais neutralisés.
 - Politique de sécurité du contenu (CSP) : la page de jeu n'exécute plus que ses propres scripts ; aucun code injecté ne peut s'exécuter.
 - Export de deck : la boîte « Enregistrer sous » est ouverte par l'application elle-même, qui n'écrit que dans le fichier choisi (la page ne peut plus demander d'écrire ailleurs).
-- Contrôles supplémentaires sur les données reçues de l'adversaire (portrait, faction du deck, motif de déconnexion).
+- Contrôles supplémentaires sur les données reçues de l'adversaire (portrait, faction du deck, motif de déconnexion, numéros de message, graine, candidats WebRTC).
+- Plus aucune boîte de dialogue ni accès fichier depuis la page : l'import de musique et le choix du dossier de TW3 passent aussi par l'application ; taille des musiques limitée à 128 Mo.
+- Connexions au serveur toujours chiffrées (`wss://`), sauf vers ce PC.
+
+## Serveur de mise en relation (à redéployer : `npx wrangler deploy`)
+- Clé secrète par joueur : connaître le code d'un salon ne permet plus de prendre la place d'un joueur et de lire ou falsifier ses messages.
+- Un client qui inonde le salon de messages est déconnecté.
+- Après une coupure réseau des deux joueurs, le salon est gardé 2 minutes pour qu'ils reviennent.
 
 ## Publication
 - Projet publié sur GitHub (un seul dépôt : jeu, application Windows, serveur, outils, tests).

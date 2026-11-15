@@ -26,7 +26,7 @@ Rien côté Rust : WebView2 (le moteur Chromium d'Edge) sait déjà faire WebRTC
 
 - `src/index.js` : `GET /room/<CODE>?role=host|guest` (WebSocket). Le Durable Object `Room` :
   - refuse un second hôte (`code-in-use`), un invité sans hôte (`no-room`), un troisième joueur (`room-full`) ;
-  - accepte qu'un joueur revienne (`rejoin=1`, après une coupure réseau) ;
+  - accepte qu'un joueur revienne après une coupure réseau (`rejoin=1`), à condition de présenter la clé secrète reçue à sa première connexion (`key`) ;
   - transmet tel quel chaque message à l'autre joueur, annonce les arrivées et départs (`peer`) ;
   - répond aux pings sans se réveiller ; se supprime quand il est vide ; ferme après 30 min sans invité, 6 h au plus.
 - `wrangler.toml` : Durable Objects en stockage SQLite (obligatoire sur l'offre gratuite).

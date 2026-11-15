@@ -260,7 +260,7 @@ const Online = (() => {
 					peer.ready = !!m.ready;
 				break;
 			case "StartGame":
-				if (Net.role === "guest")
+				if (Net.role === "guest" && typeof m.seed === "string" && m.seed.length <= 64)
 					startGame(m.seed);
 				break;
 			case "Forfeit":

@@ -46,7 +46,7 @@ with sync_playwright() as p:
             pg.evaluate("(() => { const s0 = Net.send; Net.send = (t, d) => { window.__sent = window.__sent || {}; window.__sent[t] = (window.__sent[t] || 0) + 1; return s0(t, d); }; })()")
             pages.append(pg)
         A, B = pages
-        if mode == 'relay':
+        if mode in ('relay', 'wsdrop'):
             B.evaluate("Net.rtcAvailable = false")
         A.evaluate("Online.open(); Online.create()")
         A.wait_for_function("Online.screen === 'lobby' && !!Net.code", timeout=15000)
@@ -75,6 +75,10 @@ with sync_playwright() as p:
                 break
             if mode == 'drop' and not dropped and time.time() - t0 > 25:
                 A.evaluate("Net.dropDirect()")
+                dropped = True
+            if mode == 'wsdrop' and not dropped and time.time() - t0 > 20:
+                # both players lose their room connection during a relayed game and come back with their key
+                A.evaluate("Net.dropSocket()"); B.evaluate("Net.dropSocket()")
                 dropped = True
             idle = max(pg.evaluate("Date.now() - window.__stats.lastProgress") for pg in pages)
             if idle > 60000 or time.time() - t0 > 900:

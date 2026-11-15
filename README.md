@@ -29,7 +29,7 @@ Chaque installateur est compilé automatiquement par [GitHub Actions](.github/wo
 - **Règles complètes** : toutes les capacités, tous les chefs et les cinq factions (Royaumes du Nord, Nilfgaard, Scoia'tael, Monstres, Skellige), et une IA réglable.
 - **Fidèle à TW3** : textes officiels en français, cartes sans texte, rubans de faction, écran de deck, portraits, nombres et couleurs du jeu ; passer en maintenant la barre Espace.
 - **Musique** : extraite à la demande de votre propre installation de The Witcher 3 (lecture seule), ou importée depuis vos fichiers.
-- **Partie en ligne 1v1** : créer une partie, donner le code de 6 caractères, choisir son deck et se déclarer prêt. La connexion se fait directement de PC à PC (WebRTC), avec un relais automatique si elle est impossible ; aucun port à ouvrir. Voir [docs/ONLINE-ARCHITECTURE-FR.md](docs/ONLINE-ARCHITECTURE-FR.md).
+- **Partie en ligne 1v1** : créer une partie, donner le code de 6 caractères, choisir son deck et se déclarer prêt. La connexion se fait directement de PC à PC (WebRTC), avec un relais automatique si elle est impossible ; aucun port à ouvrir. Comme dans tout jeu en pair à pair, l'adversaire voit votre adresse IP publique : ne jouez qu'avec des personnes à qui vous donnez le code. Voir [docs/ONLINE-ARCHITECTURE-FR.md](docs/ONLINE-ARCHITECTURE-FR.md).
 - **Historique** des parties, statistiques par faction, modes fenêtré / sans bord / plein écran.
 
 ## Organisation du dépôt
@@ -69,7 +69,7 @@ python3 tests/targeted.py game         # règles et cas limites
 python3 tests/realclick.py game        # interface, vrais clics de souris
 python3 tests/security.py game         # non-régression sécurité
 ```
-Mode en ligne : lancer `npm run dev` dans `server/`, puis `python3 server/test/room_flow.py` et `python3 server/test/two_clients.py 5`.
+Mode en ligne : lancer `npm run dev` dans `server/`, puis `node server/test/security.mjs`, `python3 server/test/room_flow.py` et `python3 server/test/two_clients.py 2 wsdrop`.
 
 ### Serveur en ligne
 L'application utilise par défaut `https://gwent-classic-signal.xxx.workers.dev`. Pour déployer votre propre serveur, suivez [server/README-FR.md](server/README-FR.md). L'adresse se change ensuite dans la fenêtre « Partie en ligne ».

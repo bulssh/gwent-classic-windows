@@ -98,7 +98,7 @@ pub fn run() {
     #[cfg(debug_assertions)]
     let builder = builder
         .plugin(selftest_plugin())
-        .invoke_handler(tauri::generate_handler![save_deck, write_text_file, selftest_report, music::music_list, music::music_read, music::music_write, music::music_import, music::music_clear, music::music_open_folder, music::tw3_find, music::tw3_sound_index, music::tw3_read, display::set_display_mode, display::quit_app])
+        .invoke_handler(tauri::generate_handler![save_deck, write_text_file, selftest_report, music::music_list, music::music_read, music::music_write, music::music_import, music::music_clear, music::music_open_folder, music::tw3_find, music::tw3_pick_folder, music::tw3_sound_index, music::tw3_read, display::set_display_mode, display::quit_app])
         .setup(|app| {
             if std::env::var("GWENT_SELFTEST").is_ok() {
                 let w = app.get_webview_window("main").expect("main window");
@@ -115,7 +115,7 @@ pub fn run() {
         });
 
     #[cfg(not(debug_assertions))]
-    let builder = builder.invoke_handler(tauri::generate_handler![save_deck, music::music_list, music::music_read, music::music_write, music::music_import, music::music_clear, music::music_open_folder, music::tw3_find, music::tw3_sound_index, music::tw3_read, display::set_display_mode, display::quit_app]);
+    let builder = builder.invoke_handler(tauri::generate_handler![save_deck, music::music_list, music::music_read, music::music_write, music::music_import, music::music_clear, music::music_open_folder, music::tw3_find, music::tw3_pick_folder, music::tw3_sound_index, music::tw3_read, display::set_display_mode, display::quit_app]);
 
     builder
         .run(context)

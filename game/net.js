@@ -22,6 +22,7 @@ const Net = (() => {
 
 	let url = "";                      // base URL of the Worker (wss://...)
 	let code = null, role = null;
+	let seatKey = "";                  // secret given by the room on the first connection, needed to come back
 	let ws = null, wsAlive = false, wsClosing = false, wsRetry = 0;
 	let pc = null, dc = null;
 	let transport = "none";            // "p2p" | "relay" | "none"
@@ -53,7 +54,10 @@ const Net = (() => {
 			base = base.replace(/^http/i, "ws");
 		else if (!/^wss?:/i.test(base))
 			base = "wss://" + base;
-		return base + "/room/" + code + "?role=" + role + (rejoin ? "&rejoin=1" : "");
+		// unencrypted connections only to a server on this computer (development)
+		if (/^ws:/i.test(base) && !/^ws:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(base))
+			base = base.replace(/^ws:/i, "wss:");
+		return base + "/room/" + code + "?role=" + role + (rejoin ? "&rejoin=1&key=" + encodeURIComponent(seatKey) : "");
 	}
 
 	function setTransport(t) {
@@ -94,6 +98,8 @@ const Net = (() => {
 					return;
 				}
 				if (m.t === "joined") {
+					if (typeof m.key === "string")
+						seatKey = m.key;
 					settled = true;
 					clearTimeout(timeout);
 					wsAlive = true;
@@ -138,8 +144,8 @@ const Net = (() => {
 			if (transport !== "p2p")
 				useRelayIfPossible();
 		} catch (e) {
-			if (e.message === "no-room" || e.message === "expired") {
-				emit("closed", e.message);
+			if (e.message === "no-room" || e.message === "expired" || e.message === "bad-key") {
+				emit("closed", e.message === "bad-key" ? "no-room" : e.message);
 				return;
 			}
 			setTimeout(reconnectSocket, Math.min(8000, 500 * 2 ** wsRetry++));
@@ -302,7 +308,7 @@ const Net = (() => {
 			} else if (data.candidate) {
 				if (pc && pc.remoteDescription)
 					await pc.addIceCandidate(data.candidate);
-				else
+				else if (pendingCandidates.length < 50)
 					pendingCandidates.push(data.candidate);
 			}
 		} catch (e) {
@@ -380,6 +386,8 @@ const Net = (() => {
 			}
 			return;
 		}
+		if (!Number.isSafeInteger(m.seq) || m.seq < 1)
+			return; // not a message of the game
 		if (m.seq <= lastIn)
 			return; // already received (resent after a change of link)
 		if (m.seq > lastIn + 1) {
@@ -412,6 +420,7 @@ const Net = (() => {
 
 	async function open(serverURL, asRole, roomCode) {
 		close();
+		seatKey = "";
 		url = serverURL;
 		role = asRole;
 		seqOut = lastIn = 0;
@@ -474,6 +483,7 @@ const Net = (() => {
 		// tests: disable WebRTC (relay only) / break the direct link
 		set rtcAvailable(v) { rtcAvailable = !!v; },
 		dropDirect() { if (dc) dc.close(); },
+		dropSocket() { if (ws) ws.close(4100, "test"); },   // test: lose the room connection (the player comes back with his key)
 		ALPHABET,
 	};
 })();

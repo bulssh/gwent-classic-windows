@@ -49,10 +49,15 @@ jobs:
           npx wrangler dev --port 8787 > ../wrangler.log 2>&1 &
           for i in $(seq 60); do curl -sf http://127.0.0.1:8787/health && exit 0; sleep 1; done
           cat ../wrangler.log; exit 1
+      - name: Sécurité du serveur
+        run: node server/test/security.mjs
       - name: Salon en ligne
         run: python server/test/room_flow.py
       - name: Parties en ligne à deux joueurs
-        run: python server/test/two_clients.py 2
+        run: |
+          python server/test/two_clients.py 1 p2p
+          python server/test/two_clients.py 1 drop
+          python server/test/two_clients.py 1 wsdrop
 
   desktop:
     name: Application Windows (compilation)

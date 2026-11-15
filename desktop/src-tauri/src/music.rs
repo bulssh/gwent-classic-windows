@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
 
+const MAX_MUSIC_FILE: usize = 128 << 20;
 const AUDIO_EXTENSIONS: [&str; 7] = ["ogg", "oga", "opus", "mp3", "flac", "wav", "m4a"];
 
 fn music_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -72,6 +73,9 @@ pub fn music_write(app: AppHandle, request: tauri::ipc::Request<'_>) -> Result<(
         .get("x-name")
         .and_then(|v| v.to_str().ok())
         .ok_or("missing file name")?;
+    if bytes.len() > MAX_MUSIC_FILE {
+        return Err("music file too large".into());
+    }
     let path = music_dir(&app)?.join(safe_name(name)?);
     let tmp = path.with_extension("part");
     fs::write(&tmp, bytes).map_err(|e| e.to_string())?;
@@ -79,12 +83,21 @@ pub fn music_write(app: AppHandle, request: tauri::ipc::Request<'_>) -> Result<(
 }
 
 /// Copies audio files chosen by the player into the music folder. Returns the names of the copies.
+/// The file dialog is opened here, so the page can only import files the player picked himself.
 #[tauri::command]
-pub fn music_import(app: AppHandle, paths: Vec<String>) -> Result<Vec<String>, String> {
+pub async fn music_import(app: AppHandle, title: String, filter_name: String) -> Result<Vec<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let picked = app
+        .dialog()
+        .file()
+        .set_title(title)
+        .add_filter(filter_name, &AUDIO_EXTENSIONS)
+        .blocking_pick_files()
+        .unwrap_or_default();
     let dir = music_dir(&app)?;
     let mut names = Vec::new();
-    for p in paths {
-        let src = PathBuf::from(&p);
+    for p in picked {
+        let Ok(src) = p.into_path() else { continue };
         if !src.is_file() || !is_audio(&src) {
             continue;
         }
@@ -257,6 +270,18 @@ fn cache_index(path: &Path) -> std::io::Result<Vec<(String, u64, u64)>> {
         entries.push((String::from_utf8_lossy(&names[start..end]).into_owned(), offset, size));
     }
     Ok(entries)
+}
+
+/// Lets the player point to his The Witcher 3 folder (dialog opened here, not by the page)
+#[tauri::command]
+pub async fn tw3_pick_folder(app: AppHandle, title: String) -> Option<String> {
+    use tauri_plugin_dialog::DialogExt;
+    app.dialog()
+        .file()
+        .set_title(title)
+        .blocking_pick_folder()
+        .and_then(|p| p.into_path().ok())
+        .map(|p| p.to_string_lossy().into_owned())
 }
 
 /// Finds the given sound ids (file names without .wem) in the sound caches of a TW3 install

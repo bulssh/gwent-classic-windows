@@ -8,7 +8,8 @@
 //   - the game messages themselves, only when no direct connection is possible (both players
 //     behind strict NATs or firewalls blocking UDP): the room is then a relay.
 // Idle WebSockets use the Hibernation API: an open but silent connection costs nothing on the
-// Workers Free plan. Nothing is stored except the creation time of the room.
+// Workers Free plan. Nothing is stored except the creation time of the room and one random key per
+// player (needed to come back after a network drop), all deleted when the room closes.
 
 import { DurableObject } from "cloudflare:workers";
 
@@ -17,6 +18,11 @@ const ROLES = ["host", "guest"];
 const MAX_MESSAGE = 64 * 1024;           // a game message is a few hundred bytes
 const ROOM_LIFETIME = 6 * 3600 * 1000;   // a room is closed after 6 hours whatever happens
 const HOST_WAIT = 30 * 60 * 1000;        // a room nobody joined is closed after 30 minutes
+const EMPTY_GRACE = 2 * 60 * 1000;      // a room left empty by network drops is kept this long
+const SEAT_RELEASE = 60 * 1000;           // a guest who vanished without leaving keeps his seat this long
+const KEY = /^[0-9a-f-]{36}$/;            // per-player secret given on the first connection
+const FLOOD_WINDOW = 10 * 1000;           // a player sending more than FLOOD_MAX messages
+const FLOOD_MAX = 300;                    // in FLOOD_WINDOW is disconnected (a game sends a few per second)
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
 	status,
@@ -69,16 +75,34 @@ export class Room extends DurableObject {
 		};
 
 		let created = await this.ctx.storage.get("created");
-		if (role === "host" && !rejoin) {
-			if (mine.length || theirs.length)
+		const alive = created && Date.now() - created <= ROOM_LIFETIME;
+		let key;
+		if (rejoin) {
+			// coming back: only the player who received this seat's key can take it again, so knowing
+			// the room code is not enough to replace a player and read or forge his messages
+			const given = url.searchParams.get("key") || "";
+			key = alive && await this.ctx.storage.get("key:" + role);
+			if (!key)
+				return refuse("no-room");
+			if (!KEY.test(given) || given !== key)
+				return refuse("bad-key");
+		} else if (role === "host") {
+			if (mine.length || theirs.length || (alive && await this.ctx.storage.get("key:host")))
 				return refuse("code-in-use");
+			await this.ctx.storage.deleteAll();
 			created = Date.now();
-			await this.ctx.storage.put("created", created);
-			await this.ctx.storage.setAlarm(created + HOST_WAIT);
-		} else if (!created || Date.now() - created > ROOM_LIFETIME) {
-			return refuse("no-room");
-		} else if (role === "guest" && !rejoin && (mine.length || !this.ctx.getWebSockets("host").length)) {
-			return refuse(mine.length ? "room-full" : "no-room");
+			key = crypto.randomUUID();
+			await this.ctx.storage.put({created, "key:host": key});
+		} else {
+			if (!alive || !this.ctx.getWebSockets("host").length)
+				return refuse("no-room");
+			// the seat is free if the previous guest left on purpose, or vanished more than a minute ago
+			const gone = await this.ctx.storage.get("guestGone");
+			if (mine.length || (await this.ctx.storage.get("key:guest") && !(gone && Date.now() - gone > SEAT_RELEASE)))
+				return refuse("room-full");
+			key = crypto.randomUUID();
+			await this.ctx.storage.put("key:guest", key);
+			await this.ctx.storage.delete("guestGone");
 		}
 
 		// a player coming back (network change, direct link lost) replaces its old connection
@@ -87,11 +111,12 @@ export class Room extends DurableObject {
 
 		const pair = new WebSocketPair();
 		this.ctx.acceptWebSocket(pair[1], [role]);
-		pair[1].send(JSON.stringify({t: "joined", role, peer: theirs.length > 0}));
+		pair[1].send(JSON.stringify({t: "joined", role, key, peer: theirs.length > 0}));
 		for (const ws of theirs)
 			ws.send(JSON.stringify({t: "peer", present: true, rejoin}));
-		if (role === "guest")
-			await this.ctx.storage.setAlarm(created + ROOM_LIFETIME);
+		// end of life of the room (also cancels the short grace period of a room left empty)
+		const hasGuest = role === "guest" || await this.ctx.storage.get("key:guest");
+		await this.ctx.storage.setAlarm(created + (hasGuest ? ROOM_LIFETIME : HOST_WAIT));
 		return new Response(null, {status: 101, webSocket: pair[0]});
 	}
 
@@ -99,6 +124,18 @@ export class Room extends DurableObject {
 	async webSocketMessage(ws, message) {
 		if (typeof message !== "string" || message.length > MAX_MESSAGE)
 			return;
+		// flood guard (counters live in memory: they restart when the object hibernates, which only
+		// happens when the room is quiet)
+		const now = Date.now();
+		this.flood ??= new Map();
+		const f = this.flood.get(ws);
+		if (!f || now - f.since > FLOOD_WINDOW)
+			this.flood.set(ws, {since: now, count: 1});
+		else if (++f.count > FLOOD_MAX) {
+			this.flood.delete(ws);
+			try { ws.close(4003, "flood"); } catch (e) {}
+			return;
+		}
 		const role = this.ctx.getTags(ws)[0];
 		const other = role === "host" ? "guest" : "host";
 		for (const peer of this.ctx.getWebSockets(other))
@@ -106,16 +143,31 @@ export class Room extends DurableObject {
 	}
 
 	async webSocketClose(ws, code) {
+		this.flood?.delete(ws);
 		const role = this.ctx.getTags(ws)[0];
 		const other = role === "host" ? "guest" : "host";
-		if (code !== 4001)
+		if (code !== 4001) {
 			for (const peer of this.ctx.getWebSockets(other))
 				peer.send(JSON.stringify({t: "peer", present: false}));
+			// a guest who closed normally left the room: his seat is free again; after a network
+			// drop he keeps it for a while to come back
+			if (role === "guest") {
+				if (code === 1000 || code === 1005)
+					await this.ctx.storage.delete("key:guest");
+				else
+					await this.ctx.storage.put("guestGone", Date.now());
+			}
+		}
 		try { ws.close(1000, "bye"); } catch (e) {}
 		if (this.ctx.getWebSockets().filter(s => s !== ws).length === 0) {
-			// nobody left: the room disappears (the code can be used again)
-			await this.ctx.storage.deleteAlarm();
-			await this.ctx.storage.deleteAll();
+			if (code === 1000 || code === 1005) {
+				// the last player left on purpose: the room disappears (the code can be used again)
+				await this.ctx.storage.deleteAlarm();
+				await this.ctx.storage.deleteAll();
+			} else {
+				// lost connection: the players have a little time to come back with their keys
+				await this.ctx.storage.setAlarm(Date.now() + EMPTY_GRACE);
+			}
 		}
 	}
 
