@@ -13,7 +13,8 @@ Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/g
 - Plus aucune boîte de dialogue ni accès fichier depuis la page : l'import de musique et le choix du dossier de TW3 passent aussi par l'application ; taille des musiques limitée à 128 Mo.
 - Connexions au serveur toujours chiffrées (`wss://`), sauf vers ce PC.
 
-## Serveur de mise en relation (à redéployer : `npx wrangler deploy`)
+## Serveur de mise en relation
+- **Plus de serveur commun intégré au jeu** : chaque joueur (ou groupe de joueurs) utilise son propre serveur gratuit sur son compte Cloudflare. Guide pas à pas dans `server/README-FR.md` (bouton « Deploy to Cloudflare » ou zip `gwent-classic-serveur` joint à chaque version), rappelé dans la fenêtre « Partie en ligne ».
 - Clé secrète par joueur : connaître le code d'un salon ne permet plus de prendre la place d'un joueur et de lire ou falsifier ses messages.
 - Un client qui inonde le salon de messages est déconnecté.
 - Après une coupure réseau des deux joueurs, le salon est gardé 2 minutes pour qu'ils reviennent.
@@ -24,7 +25,7 @@ Version de travail basée sur [asundr/gwent-classic](https://github.com/asundr/g
 - Identifiant de l'application : `io.github.bulssh.gwentclassic`. Les decks, réglages, historique et musique des versions précédentes sont repris automatiquement au premier lancement.
 
 # Version 2.3.1
-- Adresse du serveur de mise en relation intégrée (https://gwent-classic-signal.xxx.workers.dev) : rien à saisir, il suffit d'installer cette version des deux côtés. Elle reste modifiable dans la fenêtre « Partie en ligne ».
+- Adresse d'un serveur de mise en relation intégrée par défaut (retirée en 2.3.2 : chacun utilise désormais son propre serveur).
 
 # Version 2.3
 

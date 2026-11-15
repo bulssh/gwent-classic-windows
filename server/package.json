@@ -10,5 +10,12 @@
   },
   "devDependencies": {
     "wrangler": "^4.162.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "ROOMS": {
+        "description": "Salons de jeu (un Durable Object par code de partie). Gardez la valeur proposée."
+      }
+    }
   }
 }

@@ -1,77 +1,75 @@
-# Serveur de mise en relation de Gwent Classic (Cloudflare Worker, gratuit)
+# Créer son serveur pour jouer en ligne (gratuit, environ 5 minutes)
 
-Ce petit serveur relie deux joueurs qui ont le même code de partie (6 caractères). Il transmet la
-« poignée de main » WebRTC, puis la partie se joue directement d'un PC à l'autre. Quand aucune
-connexion directe n'est possible (pare-feu strict, 4G avec CGNAT des deux côtés, réseau qui bloque
-l'UDP), il relaie lui-même les messages du jeu : la partie fonctionne donc sur tous les réseaux.
+Le mode en ligne de Gwent Classic a besoin d'un petit **serveur de mise en relation** : il présente les deux joueurs l'un à l'autre, puis la partie se joue directement d'un PC à l'autre. Quand la connexion directe est impossible (pare-feu strict, 4G des deux côtés…), il relaie lui-même les coups.
 
-Coût : 0 €. Il tourne sur l'offre gratuite de Cloudflare Workers (Durable Objects SQLite,
-100 000 requêtes par jour). Une partie consomme quelques requêtes, même en mode relais (les
-messages entrants sont comptés 20 pour 1 et une connexion inactive ne coûte rien).
+**Il n'y a pas de serveur commun** : chaque groupe de joueurs utilise le sien, hébergé gratuitement sur un compte Cloudflare. Personne d'autre, pas même l'auteur du jeu, ne voit passer vos parties ni ne consomme votre quota.
 
-## Sécurité du compte Cloudflare
+> **Un seul des deux joueurs** crée le serveur, une seule fois. Il donne ensuite son adresse à ses adversaires : tout le monde indique la même adresse dans le jeu.
 
-- **Aucune facture possible sur l'offre gratuite** : une fois une limite quotidienne atteinte, les
-  requêtes échouent jusqu'à minuit UTC au lieu d'être facturées. Ne souscrivez pas à l'offre
-  Workers Paid et n'ajoutez pas de moyen de paiement : le pire scénario reste alors une panne du mode
-  en ligne pour la journée.
-- **Compte dédié recommandé** : utilisez un compte Cloudflare réservé à ce serveur (avec une adresse
-  e-mail dédiée), sans nom de domaine ni autre service dessus, et activez la double
-  authentification (My Profile → Authentication).
-- Le code public ne contient ni identifiant de compte ni jeton. Le jeton créé par `wrangler login`
-  reste sur votre PC : `npx wrangler logout` le révoque quand vous ne déployez plus.
-- Le serveur ne stocke aucune donnée personnelle (voir plus bas) et ne lit aucun secret.
+## Avant de commencer
+- Un **compte Cloudflare gratuit** : https://dash.cloudflare.com/sign-up (aucune carte bancaire demandée).
+- Conseillé : activer la **double authentification** sur ce compte (My Profile → Authentication).
 
-## Déploiement (une seule fois, environ 5 minutes)
+## Méthode 1 — avec le bouton, sans rien installer
+Il faut aussi un compte **GitHub** (gratuit), sur lequel Cloudflare dépose une copie du code du serveur.
 
-Il faut Node.js (version LTS, https://nodejs.org) et un compte Cloudflare gratuit
-(https://dash.cloudflare.com/sign-up, aucune carte bancaire demandée pour l'offre gratuite).
+1. Cliquez sur ce bouton :
 
-Dans un terminal (PowerShell), depuis ce dossier :
+   [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/bulssh/gwent-classic-windows/tree/main/server)
 
-```
-npm install
-npx wrangler login
-npx wrangler deploy
-```
+2. Connectez-vous à Cloudflare, puis autorisez Cloudflare à accéder à votre compte GitHub.
+3. Gardez les noms proposés (`gwent-classic-signal`) et cliquez sur **Create and deploy**.
+4. Si c'est votre premier Worker, Cloudflare vous fait choisir un sous-domaine `*.workers.dev` : prenez un pseudo, pas votre nom.
+5. À la fin, l'adresse du serveur s'affiche (Workers & Pages → `gwent-classic-signal`). Elle a la forme `https://gwent-classic-signal.<votre-sous-domaine>.workers.dev`.
 
-- `wrangler login` ouvre le navigateur pour autoriser Wrangler sur votre compte.
-- Au premier déploiement, Wrangler propose de créer votre sous-domaine `*.workers.dev` : choisissez
-  un nom (par exemple votre pseudo).
-- À la fin, Wrangler affiche l'adresse du serveur, du type
-  `https://gwent-classic-signal.<votre-sous-domaine>.workers.dev`.
+## Méthode 2 — depuis votre PC Windows
+1. Installez **Node.js** (version LTS) : https://nodejs.org
+2. Téléchargez `gwent-classic-serveur-<version>.zip` depuis la [dernière version](https://github.com/bulssh/gwent-classic-windows/releases/latest) et décompressez-le.
+3. Dans le dossier décompressé, faites clic droit → **Ouvrir dans le terminal**, puis tapez :
+   ```
+   npm.cmd install
+   npx.cmd wrangler login
+   npx.cmd wrangler deploy
+   ```
+   - `wrangler login` ouvre le navigateur pour autoriser l'outil sur votre compte Cloudflare.
+   - Au premier déploiement, Wrangler propose de créer votre sous-domaine `*.workers.dev` : prenez un pseudo, pas votre nom.
+   - Écrivez bien `npm.cmd` et `npx.cmd` : sous Windows, `npm` tout court est souvent bloqué par la politique d'exécution de PowerShell.
+4. À la fin, Wrangler affiche l'adresse du serveur : `https://gwent-classic-signal.<votre-sous-domaine>.workers.dev`.
+5. Facultatif : `npx.cmd wrangler logout` retire l'autorisation donnée à l'étape 3 (il faudra se reconnecter pour une mise à jour).
 
-Vérification : ouvrir cette adresse suivie de `/health` dans un navigateur doit afficher
-`{"service":"gwent-classic-signal","ok":true}`.
+## Vérifier que le serveur marche
+Ouvrez l'adresse du serveur suivie de `/health` dans un navigateur. Vous devez voir :
+`{"service":"gwent-classic-signal","ok":true}`
 
-## Dans le jeu
+## Jouer
+1. Dans le jeu, ouvrez **Partie en ligne** (globe en haut à droite du menu du deck).
+2. Collez l'adresse dans **Serveur de mise en relation**, en bas de la fenêtre.
+3. Envoyez à votre adversaire **l'adresse du serveur et le code de la partie**. Il colle la même adresse, puis clique sur **Rejoindre une partie**.
 
-Partie en ligne (icône globe en haut à droite du menu du deck) → en bas de la fenêtre,
-« Serveur de mise en relation » : coller l'adresse. Les deux joueurs doivent indiquer la même.
-L'adresse par défaut est définie dans `game/online.js` (`ONLINE_DEFAULT_SERVER`).
+L'adresse est retenue : il n'y a plus rien à saisir pour les parties suivantes.
+
+## Coût, sécurité et vie privée
+- **0 €, sans risque de facture** : sur l'offre gratuite, une limite quotidienne dépassée fait échouer les requêtes jusqu'à minuit UTC au lieu d'être facturée. Ne souscrivez pas l'offre *Workers Paid* : le pire cas reste alors un mode en ligne indisponible jusqu'au lendemain. Une partie ne consomme que quelques requêtes, même relayée.
+- **Compte dédié conseillé** : par prudence, utilisez un compte Cloudflare réservé à ce serveur, sans nom de domaine ni autre service dessus.
+- **Ce que le serveur garde** : l'heure de création de chaque salon et une clé aléatoire par joueur, qui permet de revenir après une coupure réseau. Tout est effacé à la fermeture du salon. Un salon quitté disparaît aussitôt, un salon vidé par des coupures au bout de 2 minutes. Un salon sans second joueur ferme au bout de 30 minutes, tout salon au bout de 6 heures.
+- **Ce qu'il voit passer** : en connexion directe, seulement la « poignée de main » WebRTC (adresses réseau des deux PC) ; en relais, les coups joués.
+- **Protection** : connaître le code d'un salon ne suffit pas à prendre la place d'un joueur (il faut sa clé), et un client qui envoie trop de messages (plus de 300 en 10 secondes) est déconnecté.
+- **Qui peut s'en servir** : toute personne qui connaît l'adresse, sur votre quota. Ne la donnez qu'à vos adversaires.
 
 ## Mettre à jour ou supprimer
+- **Mise à jour** : refaites la méthode 2 avec le zip de la nouvelle version. Avec le même compte et le même nom, l'adresse ne change pas.
+- **Suppression** : `npx.cmd wrangler delete`, ou depuis le tableau de bord Cloudflare (Workers & Pages → `gwent-classic-signal` → Settings → Delete).
 
-- Mise à jour : `npx wrangler deploy` à nouveau.
-- Suppression : `npx wrangler delete` (ou depuis le tableau de bord Cloudflare, Workers & Pages).
-
-## Ce que le serveur voit et garde
-
-- Il ne garde rien, sauf l'heure de création de chaque salon et une clé aléatoire par joueur (qui
-  permet de revenir après une coupure). Un salon quitté disparaît aussitôt, un salon vidé par des
-  coupures réseau au bout de 2 minutes ; un salon sans second joueur est fermé au bout de 30 minutes,
-  tout salon au bout de 6 heures.
-- Connaître le code d'un salon ne suffit pas à prendre la place d'un joueur : il faut sa clé.
-- Un client qui envoie trop de messages (plus de 300 en 10 secondes) est déconnecté.
-- En mode direct (P2P), il ne voit passer que la poignée de main WebRTC (adresses réseau des deux
-  PC). En mode relais, il voit passer les coups joués (messages JSON).
-
-## Test en local
-
+## Pour les développeurs : test en local
 ```
+npm install
 npx wrangler dev
 ```
+Dans le jeu, indiquez l'adresse `ws://127.0.0.1:8787` : les connexions non chiffrées (`ws://`) ne sont acceptées que vers votre propre PC.
 
-puis, dans le jeu, l'adresse `ws://127.0.0.1:8787` (les connexions non chiffrées `ws://` ne sont
-acceptées que vers ce PC). Tests : `node test/security.mjs`, puis depuis la racine du dépôt
-`python3 server/test/room_flow.py` et `python3 server/test/two_clients.py 2 wsdrop`.
+Tests, depuis la racine du dépôt (avec `npx wrangler dev` lancé) :
+- `node server/test/security.mjs`
+- `python3 server/test/room_flow.py`
+- `python3 server/test/two_clients.py 2 wsdrop`
+
+Fonctionnement détaillé : [docs/ONLINE-ARCHITECTURE-FR.md](../docs/ONLINE-ARCHITECTURE-FR.md).

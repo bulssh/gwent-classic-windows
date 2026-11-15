@@ -15,9 +15,10 @@
 
 const GAME_VERSION = "2.3.2";
 const ONLINE_PROTOCOL = 1;
-// address of the matchmaking server (Cloudflare Worker, see gwent-signal/README.md); it can also be
-// set in the online screen
-const ONLINE_DEFAULT_SERVER = "https://gwent-classic-signal.xxx.workers.dev";
+// There is no shared matchmaking server: one of the players deploys his own (free Cloudflare Worker,
+// see server/README-FR.md) and both enter its address in the online screen.
+const ONLINE_DEFAULT_SERVER = "";
+const ONLINE_SERVER_GUIDE = "https://github.com/bulssh/gwent-classic-windows/blob/main/server/README-FR.md";
 
 // Opponent played by the other computer: waits for its moves
 class ControllerRemote {
@@ -550,7 +551,11 @@ const Online = (() => {
 			<button class="on-choice" data-act="join"><span class="on-icon on-icon-join"></span><b data-k="online.join"></b><span data-k="online.joinHint"></span></button>
 		</div>
 		<p class="on-error"></p>
-		<div class="on-server"><span data-k="online.server"></span> <input type="text" spellcheck="false" placeholder="gwent-classic-signal.xxx.workers.dev"></div>
+		<div class="on-server"><span data-k="online.server"></span> <input type="text" spellcheck="false" placeholder="https://gwent-classic-signal.xxx.workers.dev"></div>
+		<div class="on-help">
+			<p data-k="online.serverHelp"></p>
+			<div class="on-help-link"><code class="on-guide"></code><button data-act="copy-guide" data-k="online.copy"></button></div>
+		</div>
 	</div>
 
 	<div class="on-screen" data-screen="join">
@@ -591,7 +596,7 @@ const Online = (() => {
 	const nameInput = $('[data-screen="home"] .on-name input');
 	nameInput.addEventListener("input", () => store.set("gc-online-name", nameInput.value.trim()));
 	const serverInput = $(".on-server input");
-	serverInput.addEventListener("change", () => store.set("gc-online-server", serverInput.value.trim()));
+	serverInput.addEventListener("change", () => { store.set("gc-online-server", serverInput.value.trim()); render(); });
 	const codeInput = $(".on-code-input");
 	codeInput.addEventListener("input", () => {
 		const v = Net.normalizeCode(codeInput.value);
@@ -621,7 +626,8 @@ const Online = (() => {
 			case "leave": leave(true); break;
 			case "start": hostStart(); break;
 			case "ready": toggleReady(); break;
-			case "copy": copyCode(); break;
+			case "copy": copyText(Net.code || "", $('[data-act="copy"]')); break;
+			case "copy-guide": copyText(ONLINE_SERVER_GUIDE, $('[data-act="copy-guide"]')); break;
 		}
 	});
 
@@ -629,23 +635,21 @@ const Online = (() => {
 		panel.querySelectorAll(".on-error").forEach(e => e.textContent = text || "");
 	}
 
-	async function copyCode() {
-		const code = Net.code || "";
+	async function copyText(text, button) {
 		let ok = false;
 		try {
-			await navigator.clipboard.writeText(code);
+			await navigator.clipboard.writeText(text);
 			ok = true;
 		} catch (e) {
 			const input = document.createElement("input");
-			input.value = code;
+			input.value = text;
 			document.body.appendChild(input);
 			input.select();
 			try { ok = document.execCommand("copy"); } catch (err) {}
 			input.remove();
 		}
-		const b = $('[data-act="copy"]');
-		b.textContent = ok ? t("online.copied") : code;
-		setTimeout(() => b.textContent = t("online.copy"), 1600);
+		button.textContent = ok ? t("online.copied") : t("online.copy");
+		setTimeout(() => button.textContent = t("online.copy"), 1600);
 	}
 
 	function setScreen(name, code = "") {
@@ -736,6 +740,8 @@ const Online = (() => {
 		if (document.activeElement !== serverInput)
 			serverInput.value = serverURL();
 		$(".on-server").classList.toggle("missing", !serverURL());
+		$(".on-help").classList.toggle("hide", !!serverURL());
+		$(".on-guide").textContent = ONLINE_SERVER_GUIDE;
 		if (screen !== "lobby")
 			return;
 		$(".on-code-value").textContent = Net.code || "";

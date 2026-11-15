@@ -75,17 +75,27 @@ jobs:
           makensis -V2 desktop/installer/installer.nsi
           Get-ChildItem desktop/dist
 
+      - name: Serveur de mise en relation (zip pour la méthode 2 du guide)
+        shell: pwsh
+        run: |
+          $dir = "gwent-classic-serveur-${{ needs.check.outputs.version }}"
+          New-Item -ItemType Directory $dir | Out-Null
+          Copy-Item -Recurse server/src, server/package.json, server/package-lock.json, server/wrangler.toml, server/README-FR.md $dir
+          Compress-Archive -Path $dir -DestinationPath "desktop/dist/$dir.zip"
+
       - name: Empreintes SHA-256
         shell: bash
         run: |
           cd desktop/dist
-          sha256sum *.exe > SHA256SUMS.txt
+          sha256sum *.exe *.zip > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Attestation de provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: desktop/dist/*.exe
+          subject-path: |
+            desktop/dist/*.exe
+            desktop/dist/*.zip
 
       - name: Notes de version
         shell: bash
@@ -107,5 +117,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v${{ needs.check.outputs.version }}" desktop/dist/*.exe desktop/dist/SHA256SUMS.txt \
+          gh release create "v${{ needs.check.outputs.version }}" desktop/dist/*.exe desktop/dist/*.zip desktop/dist/SHA256SUMS.txt \
             --title "Gwent Classic ${{ needs.check.outputs.version }}" --notes-file notes.md --target "$GITHUB_SHA"

@@ -2516,6 +2516,11 @@ button { font-family: inherit; }
 .on-server > span { color: #8f806a; }
 .on-server input { flex: 1; font-size: calc(0.8 * var(--vw)) !important; }
 .on-server.missing input { border-color: #a0503e; }
+.on-help { margin-top: calc(0.8 * var(--vw)); padding: calc(0.6 * var(--vw)) calc(0.8 * var(--vw)); border: 1px solid rgba(205, 189, 154, 0.25); background: rgba(0, 0, 0, 0.25); color: #b9ab8c; font-size: calc(0.78 * var(--vw)); line-height: 1.4; }
+.on-help.hide { display: none; }
+.on-help p { margin: 0 0 calc(0.4 * var(--vw)); }
+.on-help-link { display: flex; align-items: center; gap: calc(0.6 * var(--vw)); }
+.on-help-link code { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e3d3a8; user-select: all; }
 .on-choices { display: grid; grid-template-columns: 1fr 1fr; gap: calc(1.4 * var(--vw)); margin-top: calc(1.4 * var(--vw)); }
 .on-choice {
 	display: flex;
@@ -2581,7 +2586,7 @@ button { font-family: inherit; }
 	text-shadow: 0 0 calc(0.6 * var(--vw)) rgba(255, 200, 100, 0.35);
 	user-select: text;
 }
-.on-code button {
+.on-code button, .on-help-link button {
 	font-family: inherit;
 	font-size: calc(0.8 * var(--vw));
 	color: #e8d9b5;
@@ -2590,7 +2595,7 @@ button { font-family: inherit; }
 	border-radius: calc(0.2 * var(--vw));
 	padding: calc(0.25 * var(--vw)) calc(0.7 * var(--vw));
 }
-.on-code button:hover { background: rgba(122, 97, 55, 0.95); color: #fff; }
+.on-code button:hover, .on-help-link button:hover { background: rgba(122, 97, 55, 0.95); color: #fff; }
 .on-link { display: flex; align-items: center; gap: calc(0.45 * var(--vw)); font-size: calc(0.85 * var(--vw)); color: #b9a57e; }
 .on-dot { width: calc(0.6 * var(--vw)); height: calc(0.6 * var(--vw)); border-radius: 50%; background: #6c604d; }
 .on-link[data-link="p2p"] .on-dot { background: #6fbf4f; box-shadow: 0 0 calc(0.4 * var(--vw)) #6fbf4f; }
